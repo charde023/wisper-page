@@ -1,31 +1,30 @@
 """Render guide.md into a self-contained index.html for GitHub Pages."""
 from __future__ import annotations
 
+import argparse
+import html
 import re
+import sys
 from pathlib import Path
 
 import markdown
 
-HERE = Path(__file__).parent
-SRC = HERE / "guide.md"
-DEST = HERE / "index.html"
+# ---------------------------------------------------------------------------
+# Shared frontmatter bootstrap (resolves lib/ whether this file lives in
+# workflow/_template/, workflow/, or a legacy workspaces/<ws>/ copy).
+# ---------------------------------------------------------------------------
 
+def _ensure_lib_on_path() -> None:
+    here = Path(__file__).resolve()
+    for parent in [here.parent, *here.parents]:
+        for cand in (parent / "lib", parent / "workflow" / "lib"):
+            if (cand / "frontmatter.py").exists():
+                if str(cand) not in sys.path:
+                    sys.path.insert(0, str(cand))
+                return
 
-def split_frontmatter(text: str) -> tuple[dict, str]:
-    """Parse YAML-ish frontmatter (key: value lines) from markdown.
-
-    Returns (meta_dict, body_text). If no frontmatter, returns ({}, text).
-    """
-    m = re.match(r'^---\n(.*?)\n---\n(.*)$', text, re.DOTALL)
-    if not m:
-        return {}, text
-    fm_text, body = m.group(1), m.group(2)
-    meta: dict = {}
-    for line in fm_text.splitlines():
-        if ':' in line and not line.lstrip().startswith('#'):
-            key, value = line.split(':', 1)
-            meta[key.strip()] = value.strip()
-    return meta, body
+_ensure_lib_on_path()
+from frontmatter import split_frontmatter  # noqa: E402
 
 
 PRETENDARD_LINK = (
@@ -255,7 +254,7 @@ def slugify(text: str) -> str:
     return text.lower() or "section"
 
 
-def inject_h2_ids(html: str) -> tuple[str, list[tuple[str, str]]]:
+def inject_h2_ids(html_str: str) -> tuple[str, list[tuple[str, str]]]:
     entries: list[tuple[str, str]] = []
     used: dict[str, int] = {}
 
@@ -271,7 +270,7 @@ def inject_h2_ids(html: str) -> tuple[str, list[tuple[str, str]]]:
         entries.append((slug, title))
         return f'<h2 id="{slug}">{match.group(1)}</h2>'
 
-    new_html = re.sub(r"<h2>(.*?)</h2>", add_id, html, flags=re.DOTALL)
+    new_html = re.sub(r"<h2>(.*?)</h2>", add_id, html_str, flags=re.DOTALL)
     return new_html, entries
 
 
@@ -292,13 +291,40 @@ def build_toc(entries: list[tuple[str, str]]) -> str:
 
 
 def main() -> int:
-    md_text = SRC.read_text(encoding="utf-8")
+    parser = argparse.ArgumentParser(
+        description="Render guide.md into a self-contained index.html."
+    )
+    parser.add_argument(
+        "--workspace",
+        type=Path,
+        default=Path(__file__).parent,
+        help="Workspace directory (default: directory containing this script)",
+    )
+    parser.add_argument(
+        "--src",
+        type=Path,
+        default=None,
+        help="Override source markdown path (default: <workspace>/guide.md)",
+    )
+    parser.add_argument(
+        "--dest",
+        type=Path,
+        default=None,
+        help="Override output HTML path (default: <workspace>/index.html)",
+    )
+    args = parser.parse_args()
+
+    workspace: Path = args.workspace.resolve()
+    src: Path = args.src.resolve() if args.src else workspace / "guide.md"
+    dest: Path = args.dest.resolve() if args.dest else workspace / "index.html"
+
+    md_text = src.read_text(encoding="utf-8")
     meta, md_body = split_frontmatter(md_text)
 
-    eyebrow = meta.get("eyebrow", "지피터스 22기 · 끌림 영상 스터디")
-    subtitle = meta.get("subtitle", "라이브 강의 정리본")
-    description = meta.get("description", f"{eyebrow} — {subtitle}")
-    source = meta.get("source", "원본 영상")
+    eyebrow = html.escape(meta.get("eyebrow", "지피터스 22기 · 끌림 영상 스터디"))
+    subtitle = html.escape(meta.get("subtitle", "라이브 강의 정리본"))
+    description_raw = meta.get("description", "")
+    source = html.escape(str(meta.get("source", "원본 영상")))
 
     body = markdown.markdown(
         md_body,
@@ -307,14 +333,21 @@ def main() -> int:
     )
 
     title_match = re.search(r"<h1>(.*?)</h1>", body, re.DOTALL)
-    title_text = (
+    title_text = html.escape(
         re.sub(r"<.*?>", "", title_match.group(1)).strip()
         if title_match
         else meta.get("title", "가이드")
     )
+    if not description_raw:
+        description_raw = f"{meta.get('eyebrow', '지피터스 22기 · 끌림 영상 스터디')} — {meta.get('subtitle', '라이브 강의 정리본')}"
+    description = html.escape(str(description_raw))
+
     body = re.sub(r"<h1>.*?</h1>\s*", "", body, count=1, flags=re.DOTALL)
     body, _entries = inject_h2_ids(body)
-    toc = ""
+
+    # TOC is gated: only render when frontmatter has 'toc: true'
+    toc_flag = str(meta.get("toc", "false")).strip().lower()
+    toc = build_toc(_entries) if toc_flag == "true" else ""
 
     html_doc = f"""<!DOCTYPE html>
 <html lang="ko">
@@ -346,8 +379,17 @@ def main() -> int:
 </html>
 """
 
-    DEST.write_text(html_doc, encoding="utf-8")
-    print(f"wrote {DEST} ({DEST.stat().st_size} bytes)")
+    dest.write_text(html_doc, encoding="utf-8")
+    print(f"wrote {dest} ({dest.stat().st_size} bytes)")
+
+    # Best-effort manifest stage stamp
+    try:
+        _ensure_lib_on_path()
+        from manifest import set_stage  # noqa: E402
+        set_stage(workspace, "html")
+    except Exception:  # noqa: BLE001
+        pass
+
     return 0
 
 

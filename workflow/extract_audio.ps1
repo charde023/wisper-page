@@ -11,6 +11,13 @@ param(
 )
 $ErrorActionPreference = "Stop"
 
+# (a) Check ffmpeg is on PATH
+if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+    $Error.Clear()
+    Write-Error "ffmpeg not found on PATH. Install ffmpeg and ensure it is accessible."
+    exit 1
+}
+
 if (-not (Test-Path $Workspace)) {
     Write-Error "workspace not found: $Workspace"
     exit 1
@@ -32,17 +39,34 @@ if (-not (Test-Path $VideoFile)) {
 }
 
 $audio = Join-Path $Workspace "audio.wav"
+
+# (c) If audio.wav already exists, validate it is > 1KB; if smaller, remove and re-extract
 if (Test-Path $audio) {
-    Write-Host "audio.wav already exists, skipping: $audio"
-    exit 0
+    $audioSize = (Get-Item $audio).Length
+    if ($audioSize -gt 1KB) {
+        Write-Host "audio.wav already exists and is valid, skipping: $audio"
+        exit 0
+    } else {
+        Write-Warning "stale/empty audio removed: $audio (size: $audioSize bytes)"
+        Remove-Item $audio -Force
+    }
 }
 
 Write-Host "extracting: $VideoFile -> $audio"
-ffmpeg -i $VideoFile -ar 16000 -ac 1 $audio
+# (b) Invoke ffmpeg via call operator with quoted paths and -y flag
+& ffmpeg -i "$VideoFile" -ar 16000 -ac 1 -y "$audio"
 if ($LASTEXITCODE -ne 0) {
     Write-Error "ffmpeg failed with exit code $LASTEXITCODE"
     exit $LASTEXITCODE
 }
 Write-Host "done: $audio"
+
+# (d) Best-effort: stamp the 'audio' stage in the pipeline manifest
+try {
+    $manifestPy = Join-Path $PSScriptRoot "lib\manifest.py"
+    python "$manifestPy" "$Workspace" set audio 2>$null
+} catch {}
+
 Write-Host ""
-Write-Host "next: python `"$Workspace\transcribe.py`""
+# (e) Updated next: hint points to transcribe.ps1
+Write-Host "next: .\workflow\transcribe.ps1 -Workspace `"$Workspace`""

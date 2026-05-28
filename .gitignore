@@ -1,6 +1,9 @@
 # Workspaces — per-video artifacts, large + per-run, not tracked
 workspaces/
 
+# Source video storage — large mp4/m4a recordings, not tracked
+영상자료/
+
 # Python
 __pycache__/
 *.pyc
@@ -20,3 +23,6 @@ Thumbs.db
 
 # Misc
 *.log
+
+# Workflow local config (user-specific overrides; config.example.json is committed)
+workflow/config.json

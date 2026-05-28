@@ -27,20 +27,32 @@ ffprobe -i "<video.mp4>" -show_entries format=duration -v quiet -of csv="p=0"
 ```powershell
 .\workflow\new_workspace.ps1 -VideoFile "<영상 절대 경로>"
 ```
-→ `workspaces/<영상-basename>/` 생성, `.video-path`에 영상 경로 저장, `transcribe.py`+`make_html.py` 복사.
+→ `workspaces/<영상-basename>/` 생성, `.video-path`에 영상 경로 저장, `pipeline.json` 스테이지 매니페스트 초기화.
+`transcribe.py`·`make_html.py`는 **더 이상 워크스페이스에 복사되지 않음** — `workflow/_template/`의 정본을 `--workspace` 플래그로 직접 호출.
+
+**원클릭 오케스트레이터** (Steps 1-4를 한 번에):
+```powershell
+.\workflow\run.ps1 -VideoFile "<영상 절대 경로>"
+```
+→ `new_workspace` → `extract_audio` → `transcribe.ps1` 순으로 자동 진행. 전사만 필요할 때는 `-TranscribeOnly` 옵션 추가 (→ §2.5 참고).
 
 ### Step 3. 오디오 추출
 ```powershell
 .\workflow\extract_audio.ps1 -Workspace ".\workspaces\<영상-basename>"
 ```
-→ `audio.wav` (16kHz mono).
+→ `audio.wav` (16kHz mono). `pipeline.json`의 `audio` 스테이지 스탬프.
 
 ### Step 4. Whisper 전사 (**백그라운드 권장**)
+```powershell
+# transcribe.ps1 권장 — exit code 대신 산출물 존재 여부로 성공 판단
+.\workflow\transcribe.ps1 -Workspace ".\workspaces\<영상-basename>"
+```
+또는 직접 호출:
 ```bash
-python "workspaces/<영상-basename>/transcribe.py"
+python workflow/_template/transcribe.py --workspace "workspaces/<영상-basename>"
 ```
 - **반드시 `run_in_background: true`로 실행** (5분~30분 이상 소요)
-- exit code 127로 떨어져도 산출물(transcript.txt 등) 확인 후 정상이면 진행
+- `transcribe.ps1`이 exit code 127 문제를 내부 처리 — 산출물(transcript.txt) 존재 여부로 성공 판정하므로 exit code 무시 가능
 - 산출물: `transcript.txt`, `transcript.srt`, `segments.json`, `progress.log`
 
 ### Step 5. transcript_clean.md 작성 (Claude가 직접)
@@ -80,31 +92,64 @@ date: YYYY-MM-DD
 6. `## 1. ~ ## N.` — 상세 본문 (강사·섹션별)
 7. (선택) `## 부록 — 명대사`, `## 검증 체크리스트`, `## 자주 막히는 곳`
 
+**작성 규칙 (추가)**:
+- **이모지 사용 금지** (명시적 요청 없는 한). 강조는 **볼드** 또는 `> 인용구`로.
+- 골격은 `workflow/_template/guide-template.md` 참고.
+- 푸시 전 검증: `python workflow/lint_guide.py <guide.md>`
+
 **Slug 명명**: `YYYY-MM-DD-<짧은-주제>` (예: `2026-05-18-installation`, `2026-05-18-week1-lecture`)
 
 ### Step 7. HTML 생성 + publish + 배포
 
-```bash
-# HTML 생성
-python "workspaces/<영상-basename>/make_html.py"
+**원클릭 배포** (권장):
+```powershell
+.\workflow\deploy.ps1 -Workspace ".\workspaces\<영상-basename>" -Slug <slug>
+```
+→ HTML 생성 → stage → page-repo 복사 → 인덱스 갱신 → git push 까지 한 번에.
+
+또는 단계별 수동 실행:
+```powershell
+# HTML 생성 (중앙 정본 호출)
+python workflow/_template/make_html.py --workspace "workspaces/<영상-basename>"
 
 # publish 폴더 구성
 python workflow/stage_publish.py "workspaces/<영상-basename>" --slug <slug>
 
-# page 리포로 복사
-cp -r "workspaces/<영상-basename>/publish/<slug>" "<page-repo>/"
+# page 리포로 복사 (PowerShell)
+Copy-Item -Recurse -Force "workspaces\<영상-basename>\publish\<slug>" "<page-repo>\"
 
 # 루트 인덱스 갱신
 python workflow/update_pages_index.py "<page-repo>"
 
 # git commit + push
-cd "<page-repo>"
-git add -A
-git commit -m "add YYYY-MM-DD <topic>"
-git push origin main
+git -C "<page-repo>" add -A
+git -C "<page-repo>" commit -m "add YYYY-MM-DD <topic>"
+git -C "<page-repo>" push origin main
 ```
 
+> `pageRepoPath` 등 머신별 경로는 `workflow/config.json`(gitignored)에 보관.
+> 없으면 `workflow/config.example.json`을 복사해 값 채울 것.
+
 배포 후 1~2분 대기 → `WebFetch`로 `https://charde023.github.io/page/<slug>/` 검증.
+
+---
+
+### 2.5 전사 전용 모드 (transcribe-only)
+
+미팅·통화·비강의 녹화 등 guide.md/HTML/Pages 배포가 필요 없는 경우. 과거 워크스페이스 9개 중 약 4개가 이 모드였음.
+
+```powershell
+.\workflow\run.ps1 -VideoFile "<녹화 절대 경로>" -TranscribeOnly
+```
+→ Steps 1–4만 실행 (new_workspace → extract_audio → transcribe). guide.md·HTML·배포 없음.
+
+**산출물**: `transcript_clean.md` 1개, 저장 위치는 Downloads 또는 `영상자료/` 폴더.
+
+| 상황 | 정책 |
+|---|---|
+| 일반 미팅/통화 | 화자 구분 (`**홍길동**: …`), 파일 상단에 **요지 표** |
+| 여러 건 | 하나의 md로 병합 (시간순, 파일명 헤더로 구분) |
+| 어휘·문장 교정 | 맞춤법·오인식만 교정. 타임스탬프 미기록. 요약·재배열 없음 |
 
 ---
 
@@ -114,7 +159,8 @@ git push origin main
 |---|---|
 | `C:\workspace\wisper-page\` | **이 프로젝트 루트** |
 | `workflow/` | 도구 스크립트 (수정 시 다음 영상에도 반영됨) |
-| `workspaces/<basename>/` | 영상별 작업물 (자동 생성, gitignore) |
+| `workspaces/<basename>/` | 영상별 작업물 (자동 생성, gitignore). 각 워크스페이스에 `pipeline.json` 스테이지 매니페스트 자동 생성 |
+| `workflow/config.json` | 머신별 경로 설정 (gitignored). `config.example.json` 복사 후 수정 |
 | `docs/specs/`, `docs/plans/` | 설계·계획 문서 |
 | `C:\Users\inwon\Documents\page-repo\` | **GitHub Pages 리포 clone** |
 | 원본 영상 mp4 | 보통 `C:\Users\inwon\Documents\Bandicam\` (위치는 매번 다를 수 있음, 절대 경로로 처리) |
@@ -166,7 +212,8 @@ page/
 | 상황 | 대응 |
 |---|---|
 | **`cublas64_12.dll` not found** | `transcribe.py`에 이미 `os.environ["PATH"]` prepend 패치 적용됨. `_template/`의 최신 버전 사용 |
-| **Whisper exit code 127** | 산출물(transcript.txt) 확인 후 정상이면 무시하고 진행 |
+| **Whisper exit code 127** | `transcribe.ps1`이 산출물 존재 여부로 성공 판정하므로 exit code 무시. 직접 py 호출 시에도 transcript.txt 있으면 진행 |
+| **머신별 경로 (pageRepoPath 등)** | `workflow/config.json`(gitignored)에 보관. 없으면 `config.example.json` 복사 후 값 채울 것 |
 | **인덱스 카드에 slug만 표시** | publish 폴더 guide.md에 frontmatter가 있는지 확인. `stage_publish.py`는 frontmatter를 **유지**하도록 수정됨 (제거 X) |
 | **2시간 넘는 영상 transcript** | 한 번에 못 읽음. `Read offset/limit`로 청크 단위 정리, 의미 보존하되 압축 |
 | **새 폴더 인덱스 누락** | `update_pages_index.py`가 `YYYY-MM-DD-` 접두 폴더만 스캔. slug 규칙 지켜야 함 |
@@ -190,19 +237,14 @@ page/
 영상 처리 요청 받으면:
 
 - [ ] `ffprobe`로 길이 확인 → 사용자에게 예상 소요 시간 안내
-- [ ] `new_workspace.ps1`로 작업 폴더 생성
-- [ ] `extract_audio.ps1`로 오디오 추출
-- [ ] `transcribe.py` 백그라운드 실행 (run_in_background: true) → 완료 알림 대기
+- [ ] `run.ps1` (또는 `new_workspace.ps1` → `extract_audio.ps1` → `transcribe.ps1`) 실행 — 백그라운드(run_in_background: true) → 완료 알림 대기
 - [ ] `transcript.txt` 읽고 영상 주제 파악 (긴 영상은 청크)
 - [ ] `transcript_clean.md` 작성 (의미 보존 + 교정)
 - [ ] `guide.md` 작성 (frontmatter + 구조화된 TL;DR + 본문)
 - [ ] slug 결정 (`YYYY-MM-DD-<topic>`, 같은 날짜에 여러 영상이면 토픽 구분)
-- [ ] `make_html.py` 실행
-- [ ] `stage_publish.py` 실행
+- [ ] `lint_guide.py`로 guide.md 검증 (`python workflow/lint_guide.py <guide.md>`)
 - [ ] **사용자에게 푸시 리포 확인** ("page에 올릴까? 다른 리포?")
-- [ ] page-repo로 복사 (또는 사용자 지정 리포)
-- [ ] `update_pages_index.py` 실행
-- [ ] git commit + push (commit message에 한 줄 + 변경 사항)
+- [ ] `deploy.ps1` (또는 `make_html.py` → `stage_publish.py` → `Copy-Item` → `update_pages_index.py` → git push) 실행
 - [ ] 1~2분 후 WebFetch로 라이브 URL 검증 (캐시 우회 위해 `?v=N` 권장)
 - [ ] 사용자에게 라이브 URL + commit hash 보고
 

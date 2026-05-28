@@ -10,7 +10,28 @@ from __future__ import annotations
 
 import argparse
 import re
+import shutil
+import sys
 from pathlib import Path
+
+# ---------------------------------------------------------------------------
+# Shared lib bootstrap (resolves whether this script lives in workflow/,
+# workflow/_template/, or a legacy workspaces/<ws>/ copy)
+# ---------------------------------------------------------------------------
+def _ensure_lib_on_path() -> None:
+    here = Path(__file__).resolve()
+    for parent in [here.parent, *here.parents]:
+        for cand in (parent / "lib", parent / "workflow" / "lib"):
+            if (cand / "frontmatter.py").exists():
+                if str(cand) not in sys.path:
+                    sys.path.insert(0, str(cand))
+                return
+
+_ensure_lib_on_path()
+from frontmatter import split_frontmatter  # noqa: E402
+from config import load_config  # noqa: E402
+
+# ---------------------------------------------------------------------------
 
 CSS = """
 :root {
@@ -74,20 +95,13 @@ body {
 """
 
 
-def split_frontmatter(text: str) -> tuple[dict, str]:
-    m = re.match(r'^---\n(.*?)\n---\n(.*)$', text, re.DOTALL)
-    if not m:
-        return {}, text
-    fm_text = m.group(1)
-    meta: dict = {}
-    for line in fm_text.splitlines():
-        if ':' in line and not line.lstrip().startswith('#'):
-            key, value = line.split(':', 1)
-            meta[key.strip()] = value.strip()
-    return meta, m.group(2)
-
-
 def main() -> int:
+    cfg = load_config()
+    site_eyebrow = cfg.get("siteEyebrow", "지피터스 22기 · 끌림 영상 스터디")
+    site_title = cfg.get("siteTitle", "스터디 가이드 모음")
+    site_subtitle = cfg.get("siteSubtitle", "라이브 강의 녹화본을 보고서 형태로 정리한 모음입니다.")
+    site_footer = cfg.get("siteFooter", "charde023 · 자동 생성 인덱스")
+
     parser = argparse.ArgumentParser()
     parser.add_argument("repo", type=Path, help="path to charde023/page checkout")
     args = parser.parse_args()
@@ -98,7 +112,7 @@ def main() -> int:
         return 1
 
     cards: list[dict] = []
-    for folder in sorted(repo.iterdir()):
+    for folder in repo.iterdir():
         if not folder.is_dir():
             continue
         if not re.match(r'^\d{4}-\d{2}-\d{2}-', folder.name):
@@ -114,7 +128,8 @@ def main() -> int:
             "subtitle": meta.get("subtitle", ""),
         })
 
-    cards.sort(key=lambda c: c["date"], reverse=True)
+    # Deterministic sort: date desc, tiebreak by folder name prefix then full name
+    cards.sort(key=lambda c: (c["date"], c["slug"][:10], c["slug"]), reverse=True)
 
     if cards:
         items_html = "\n".join(
@@ -134,27 +149,37 @@ def main() -> int:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>지피터스 스터디 가이드 모음</title>
-<meta name="description" content="지피터스 22기 끌림 영상 스터디 라이브 강의 정리본 모음">
+<title>지피터스 {site_title}</title>
+<meta name="description" content="{site_eyebrow} {site_subtitle}">
 <meta name="theme-color" content="#2563eb">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <style>{CSS}</style>
 </head>
 <body>
 <header class="header">
-  <span class="eyebrow">지피터스 22기 · 끌림 영상 스터디</span>
-  <h1>스터디 가이드 모음</h1>
-  <div class="sub">라이브 강의 녹화본을 보고서 형태로 정리한 모음입니다.</div>
+  <span class="eyebrow">{site_eyebrow}</span>
+  <h1>{site_title}</h1>
+  <div class="sub">{site_subtitle}</div>
 </header>
 {list_html}
 <footer class="footer">
-  charde023 · 자동 생성 인덱스 ({len(cards)}개 가이드)
+  {site_footer} ({len(cards)}개 가이드)
 </footer>
 </body>
 </html>
 """
 
     dest = repo / "index.html"
+
+    # Stable output: skip write if content is identical
+    if dest.exists() and dest.read_text(encoding="utf-8") == html:
+        print("index unchanged")
+        return 0
+
+    # Backup existing index.html before overwriting
+    if dest.exists():
+        shutil.copy2(dest, dest.with_suffix(".html.bak"))
+
     dest.write_text(html, encoding="utf-8")
     print(f"wrote {dest} ({len(cards)} cards)")
     return 0
