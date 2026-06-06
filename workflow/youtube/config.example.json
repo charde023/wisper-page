@@ -1,0 +1,20 @@
+{
+  "channelUrl": "https://www.youtube.com/@TechBridge-KR",
+  "channelId": "UC895rbZX2iXLTDfji7W4PfA",
+  "rssUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC895rbZX2iXLTDfji7W4PfA",
+  "vaultNoteDir": "C:\\workspace\\obsidian\\charde_n\\학습노트\\TechBridge-KR",
+  "whisperModel": "large-v3",
+  "whisperDevice": "cuda",
+  "whisperLanguage": "auto",
+  "ytJsRuntime": "node",
+  "titlePrefixStrip": "[한글자막]",
+  "topicKeywords": [
+    "claude code", "claude", "anthropic", "opus", "sonnet", "haiku",
+    "codex", "openai", "gpt", "gemini", "llm",
+    "agent", "agentic", "subagent", "multi-agent", "harness", "orchestrat",
+    "mcp", "tool use", "tool call", "context", "prompt", "rag", "retrieval",
+    "eval", "benchmark", "memory", "skill", "workflow", "pipeline",
+    "coding", "engineer", "software", "developer", "refactor", "review",
+    "fine-tune", "reasoning", "inference", "token", "embedding", "vector"
+  ]
+}
