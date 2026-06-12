@@ -258,3 +258,55 @@ page/
 - `docs/plans/2026-05-19-video-to-pages-workflow.md` — 실행 계획서
 
 기존 작업 결과 (Bandicam 폴더에 남아있는 5/17, 5/18 가이드 작업물)도 참고 가능.
+
+---
+
+## 10. YouTube 채널 지식화 — TechBridge-KR → Obsidian
+
+위 §1-9는 **로컬 mp4 → GitHub Pages** 워크플로다. 이건 **별개 워크플로**: YouTube 채널 영상을 전사해 **Obsidian 학습노트**로 만든다. (Pages 배포 없음.)
+
+- **도구**: `workflow/youtube/` (README 참고). 전사 인프라(`transcribe.ps1`·`_template/transcribe.py`·`manifest`)는 §1-9와 공유.
+- **설계/계획**: `docs/specs/2026-06-06-techbridge-knowledge-pipeline-design.md`, `docs/plans/2026-06-06-techbridge-knowledge-pipeline.md`
+- **대상 채널**: TechBridge-KR (`UC895rbZX2iXLTDfji7W4PfA`) — 해외(영어) AI/개발 강연을 한글자막 입혀 재업로드하는 큐레이션 채널.
+- **산출 대상**: `C:\workspace\obsidian\charde_n\학습노트\TechBridge-KR\`
+
+### 트리거
+> *"TechBridge 새 영상 처리해줘"*, *"이 유튜브 영상 전사해서 노트로"* + URL, *"채널 백필 더 돌려줘"*
+
+### 핵심 사실 (반드시 기억)
+- **오디오는 영어**, 한글자막은 영상에 구워박혀(burned-in) 텍스트 추출 불가 → **Whisper로 영어 원본 전사**(`-Language auto` → en). 한글 자동자막 쓰지 말 것.
+- yt-dlp는 **`--js-runtimes node`** 필수. 음성만 받아 16k mono wav 직접 산출.
+- 전사 종료코드 무시(산출물 검증이 진실) — `transcribe.ps1`가 처리.
+
+### 단계
+```powershell
+# 1. (백필) 채널 스캔 → 큐레이션 → 차드 확인
+python workflow\youtube\yt_channel_scan.py --months 3
+python workflow\youtube\curate.py --top 50      # 표 보여주고 가감 확정 ← 게이트
+
+# 2. 배치 전사 (워크스페이스는 메인 체크아웃에 영구 저장)
+.\workflow\youtube\run_youtube.ps1 -Queue workflow\youtube\state\curated_queue.json -RootDir "C:\workspace\wisper-page"
+
+# 3. (Claude) 영상별 transcript.txt + youtube.json → 학습노트 작성 (벌트에 Write)
+#    노트작성은 Sonnet 실행자 병렬(Workflow) 권장. 포맷은 note_template.md.
+
+# 4. 인덱스 갱신
+python workflow\youtube\rebuild_index.py
+```
+
+### 노트 정책 (Claude가 직접 작성)
+- 영상 1개 = 노트 1개. **상단에 학습 헤더**: `핵심 학습 포인트(내가 배워야 할 것)` / `내가 모를 만한 것` / `화자의 디테일(흘린 수치·설정·명령어·뉘앙스)`. 그 아래 `## 교정 전사(한국어)` 접기식.
+- 한국어로 교정·번역, 핵심 영어 용어 괄호 병기, 음성인식 의심 단어 `[?원문]`(예: `Cloud`→`Claude`).
+- frontmatter에 `original_creator`·`original_links`(원작 출처 기록) + `summary`(목차용) 채울 것.
+- **이모지 금지.** 강조 스팬 2종(주황 `#ef6c00` / 일반 볼드 1.1em)만. 볼트 학습노트 표준 준수.
+- 재사용 용어는 `학습노트\` 루트에 `English-한국어.md` 용어노트로 스필오버 + `[[wikilink]]`.
+
+### 신규 영상 알림 (푸시만, 처리는 승인 후)
+- 로컬 `scheduled-tasks` 일일 태스크가 `rss_watch.py --json --mark`로 신규 감지 → **PushNotification으로 제목·URL 보고만**. 차드 "응" 하면 그때 `run_youtube.ps1` + 노트작성.
+
+### 원작 채널 확장 (1단계 = 기록만)
+- 채널은 원본 영상 링크를 안 검 — 화자 이름+SNS만 크레딧. 노트 frontmatter에 출처 기록 → `_원작채널.md`에 원작자별 누적. 원작 채널 직접 추적은 차후 단계(YAGNI).
+
+### 푸시 정책
+- **wisper-page 리포 push는 차드 승인 후.** 도구·CLAUDE.md·docs 변경만 해당. `workspaces/`·`workflow/youtube/state/`는 gitignore.
+- **Obsidian 볼트(로컬 git) 노트 적재는 일반 작업** — 별도 승인 불필요.

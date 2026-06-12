@@ -26,3 +26,7 @@ Thumbs.db
 
 # Workflow local config (user-specific overrides; config.example.json is committed)
 workflow/config.json
+
+# YouTube pipeline — machine-local state (channel_index, curated_queue, seen_videos) + local config
+workflow/youtube/state/
+workflow/youtube/config.json

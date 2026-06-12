@@ -33,7 +33,8 @@ if (-not $VideoFile) {
     }
 }
 
-if (-not (Test-Path $VideoFile)) {
+# -LiteralPath: '[' ']' in filenames (e.g. "[지피터스]") are wildcard chars otherwise.
+if (-not (Test-Path -LiteralPath $VideoFile)) {
     Write-Error "source video not found: $VideoFile"
     exit 1
 }

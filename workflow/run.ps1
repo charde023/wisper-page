@@ -77,8 +77,8 @@ $results = @()   # array of [ordered]@{Video=…; Workspace=…; Status=…; Not
 foreach ($vf in $VideoFile) {
     $videoAbs = $vf
     if (-not [System.IO.Path]::IsPathRooted($vf)) {
-        if (Test-Path $vf) {
-            $videoAbs = (Resolve-Path $vf).Path
+        if (Test-Path -LiteralPath $vf) {
+            $videoAbs = (Resolve-Path -LiteralPath $vf).Path
         }
         # If not resolvable here let new_workspace.ps1 emit the error
     }
@@ -100,9 +100,11 @@ foreach ($vf in $VideoFile) {
     # ------------------------------------------------------------------
     Write-Host ""
     Write-Host "[1/3] Creating workspace..."
-    $newWsArgs = @("-VideoFile", $videoAbs)
-    if ($Name)  { $newWsArgs += @("-Name",  $Name) }
-    if ($Force) { $newWsArgs += "-Force" }
+    # Use hashtable splatting (not array) so named binding is guaranteed —
+    # array splatting can mis-bind "-VideoFile" as the parameter VALUE.
+    $newWsArgs = @{ VideoFile = $videoAbs }
+    if ($Name)  { $newWsArgs["Name"]  = $Name }
+    if ($Force) { $newWsArgs["Force"] = $true }
 
     & $newWorkspacePs1 @newWsArgs
     if ($LASTEXITCODE -ne 0) {
