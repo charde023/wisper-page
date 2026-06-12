@@ -82,6 +82,13 @@ body {
   text-align: center; color: var(--text-soft); padding: 40px 20px;
   background: var(--surface); border: 1px dashed var(--border); border-radius: 12px;
 }
+.gpters-link {
+  display: block; margin: 0 0 22px; padding: 14px 18px;
+  background: var(--accent-soft); color: var(--accent-deep);
+  border: 1px solid var(--accent); border-radius: 12px;
+  text-decoration: none; font-weight: 700; text-align: center;
+}
+.gpters-link:hover { background: #cfe0fd; }
 .footer {
   margin-top: 4em; padding-top: 1.4em; border-top: 1px solid var(--border);
   font-size: 0.88em; color: var(--text-soft); text-align: center;
@@ -161,6 +168,7 @@ def main() -> int:
   <h1>{site_title}</h1>
   <div class="sub">{site_subtitle}</div>
 </header>
+<a class="gpters-link" href="./gpters/">지피터스 22기 강의만 주차순으로 보기 →</a>
 {list_html}
 <footer class="footer">
   {site_footer} ({len(cards)}개 가이드)

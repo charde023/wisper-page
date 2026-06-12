@@ -25,14 +25,16 @@ $workspacesDir = Join-Path $rootDir "workspaces"
 # ---------------------------------------------------------------------------
 if ([System.IO.Path]::IsPathRooted($VideoFile)) {
     $videoPath = $VideoFile
-} elseif (Test-Path $VideoFile) {
-    $videoPath = (Resolve-Path $VideoFile).Path
+} elseif (Test-Path -LiteralPath $VideoFile) {
+    $videoPath = (Resolve-Path -LiteralPath $VideoFile).Path
 } else {
     Write-Error "video file not found: $VideoFile (try an absolute path)"
     exit 1
 }
 
-if (-not (Test-Path $videoPath)) {
+# -LiteralPath: filenames like "[지피터스] ...mp4" contain '[' ']' which
+# PowerShell otherwise treats as wildcard character classes (match fails).
+if (-not (Test-Path -LiteralPath $videoPath)) {
     Write-Error "video file not found at resolved path: $videoPath"
     exit 1
 }

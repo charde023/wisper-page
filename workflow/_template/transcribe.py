@@ -209,9 +209,14 @@ def main(argv: list[str] | None = None) -> int:
     segments_iter, info = model.transcribe(
         str(AUDIO),
         language=whisper_language,
-        beam_size=5,
+        # Greedy decoding (beam_size=1) + condition_on_previous_text=False:
+        # beam search on long talks with applause / overlapping speech was
+        # observed to loop forever mid-file (~48%) and stall the whole run.
+        # Greedy is deterministic, faster, and does not get stuck in that loop.
+        beam_size=1,
         vad_filter=True,
         vad_parameters={"min_silence_duration_ms": 500},
+        condition_on_previous_text=False,
     )
     log(
         f"detected language={info.language} prob={info.language_probability:.2f} "
