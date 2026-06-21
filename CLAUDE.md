@@ -143,7 +143,7 @@ git -C "<page-repo>" push origin main
 ```
 → Steps 1–4만 실행 (new_workspace → extract_audio → transcribe). guide.md·HTML·배포 없음.
 
-**산출물**: `transcript_clean.md` 1개, 저장 위치는 Downloads 또는 `영상자료/` 폴더.
+**산출물**: 전사 정리본 md. **저장 위치는 프로젝트 루트 `결과물/` 폴더로 통일**(워크스페이스에 흩어두지 않음), **파일명은 영상·녹화 제목**으로 한다 — `transcript_clean.md` 같은 고정 이름은 여러 건일 때 구분이 안 되므로 금지. (윈도우 금지문자 `\ / : * ? " < > |`는 제거 또는 ` - ` 치환.)
 
 | 상황 | 정책 |
 |---|---|
@@ -160,6 +160,7 @@ git -C "<page-repo>" push origin main
 | `C:\workspace\wisper-page\` | **이 프로젝트 루트** |
 | `workflow/` | 도구 스크립트 (수정 시 다음 영상에도 반영됨) |
 | `workspaces/<basename>/` | 영상별 작업물 (자동 생성, gitignore). 각 워크스페이스에 `pipeline.json` 스테이지 매니페스트 자동 생성 |
+| `결과물/` | **전사 정리본 결과물 모음** (gitignore). 모든 전사 산출물을 여기 한곳에, 파일명 = 영상 제목 |
 | `workflow/config.json` | 머신별 경로 설정 (gitignored). `config.example.json` 복사 후 수정 |
 | `docs/specs/`, `docs/plans/` | 설계·계획 문서 |
 | `C:\Users\inwon\Documents\page-repo\` | **GitHub Pages 리포 clone** |

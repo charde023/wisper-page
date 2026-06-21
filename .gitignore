@@ -4,6 +4,9 @@ workspaces/
 # Source video storage — large mp4/m4a recordings, not tracked
 영상자료/
 
+# Collected clean transcripts — per-video result md, not tracked
+결과물/
+
 # Python
 __pycache__/
 *.pyc
