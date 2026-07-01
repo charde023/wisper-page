@@ -93,7 +93,11 @@ def run_ytdlp(args: list[str], js_runtime: str = "node", check: bool = False) ->
 
 
 def strip_title_prefix(title: str, prefix: str) -> str:
+    import re as _re
+
     title = (title or "").strip()
     if prefix and title.startswith(prefix):
         title = title[len(prefix):].strip()
+    # 일반화: 남은 선두 [..자막] 브래킷([한글자막]·[한영자막] 등)도 제거
+    title = _re.sub(r"^\[[^\]]*자막\]\s*", "", title).strip()
     return title
