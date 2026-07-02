@@ -55,7 +55,8 @@ def report_to_chami(done_info: list[dict], n_skip: int, n_fail: int) -> None:
     titles = "\n".join(f"- {v.get('title', '')}" for v in done_info)
     msg = (
         f"{REPORT_AGENT}, TechBridge 야간 파이프라인이 방금 돌았어(신규 {len(done_info)}개 발행). "
-        f"이 채널에 팀 보고로 올려줘 — 멘션0·CEO톤·짧게.\n\n"
+        f"이 채널에 팀 보고로 올려줘 — 보고 첫머리에 차드 멘션 `<@U08NU0U1VM4>` 꼭 넣고"
+        f"(다른 사람/에이전트는 멘션X)·CEO톤·짧게.\n\n"
         f"[신규 학습노트]\n{titles}\n\n"
         f"🔗 {PAGE_URL}\n"
         f"확인법: 이 링크 열어 카드 수 / 맥 /tmp/techbridge-nightly.log "
