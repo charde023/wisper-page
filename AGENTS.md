@@ -87,6 +87,9 @@ python workflow\youtube\rebuild_index.py                       # 인덱스 갱�
 - 없음(단일 영역, 워크플로우 도구 중심). 서브워크플로우(YouTube 지식화)가 별도 영역으로 커지면 `workflow/youtube_MAP.md` 승격 검토.
 
 ## 문서 지도
+- 헌장(불변식·로드맵·게이트·열린결정): `docs/CHARTER.md` — 페이즈 착수 전 항상 먼저 읽는다(`cha-dev-phase` Phase 0).
 - 의사결정 히스토리: `docs/specs/2026-05-19-video-to-pages-workflow-design.md`(설계서), `docs/plans/2026-05-19-video-to-pages-workflow.md`(실행계획), `docs/specs/2026-06-06-techbridge-knowledge-pipeline-design.md`·`docs/plans/2026-06-06-techbridge-knowledge-pipeline.md`(YouTube 지식화)
+- 최신 기획서(구현 대기): `docs/design/2026-07-02_맥-로컬-전사-파이프라인-기획서.md`+`_구현계획서.md`(P2 맥 이식), `docs/design/2026-07-02_학습노트-자동화-파이프라인-기획서.md`+`_구현계획서.md`(P3 무인 자동화)
+- 신규 설계·기획 산출물 저장 위치(표준): `design/`(현재 비어있음 — 기존 문서는 위 `docs/design/`에 레거시 배치, 안내는 `design/.keep` 참고)
 - 기존 작업 결과: Bandicam 폴더에 남은 5/17·5/18 가이드 작업물 참고 가능
-- 핸드오프: `docs/handoff/`(있으면)
+- 핸드오프: `docs/handoff/`(세션 인계 문서, 현재 비어있음)
