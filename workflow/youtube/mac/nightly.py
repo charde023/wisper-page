@@ -1,6 +1,7 @@
 """야간 오케스트레이터: 감시→큐레이션→전사→교정→노트→인덱스·커밋→발행→알림.
 
-launchd(kr.techbridge.nightly, 매일 23시)가 호출. 멱등·부분실패 복구.
+차미(헤르메스) cron 'techbridge-nightly'(매일 23시)이 --script로 호출. 멱등·부분실패 복구.
+결과는 SUMMARY_PATH(JSON)로만 방출 — 팀 보고 발행은 차미가 그 파일을 읽어 수행(파이프라인은 실행만).
 - 큐레이션: curate 점수 >= TB_CURATE_MIN(기본 1.0)만 노트화. 미만은 스킵(+seen 마킹).
 - LLM(교정·노트)은 코덱스 프록시(종량0). claude -p 안 씀.
 - seen 마킹은 '완주한 영상만' → 실패분 다음 밤 재개.
@@ -10,6 +11,7 @@ launchd(kr.techbridge.nightly, 매일 23시)가 호출. 멱등·부분실패 복
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -31,11 +33,10 @@ THRESHOLD = float(os.environ.get("TB_CURATE_MIN", "1.0"))
 SEEN = "seen_videos.json"
 PY = sys.executable
 
-# 완료 보고 인계(헤르메스) — 인계=슬랙 텍스트 원칙(에이전트 파일 직접수정 X)
-SLACK_DIR = "/Users/charde023/workspace/slack_agent"
-SLACK_PY = f"{SLACK_DIR}/.venv/bin/python"  # 맥은 반드시 .venv(system엔 slack_sdk 없음)
-REPORT_AGENT = os.environ.get("TB_REPORT_AGENT", "차미")  # 보고 대상. 안나로 바꾸려면 이 값만
+# 완료 요약을 JSON으로 방출 → 차미(헤르메스) cron이 이 파일을 읽어 팀 보고를 올린다.
+# (구: report_to_chami로 차미에게 슬랙 인계 → 2026-07-08 차미 cron '실행+보고' 단일화로 릴레이 제거)
 PAGE_URL = "https://charde023.github.io/page/study-notes/"
+SUMMARY_PATH = os.environ.get("TB_SUMMARY_PATH", "/tmp/techbridge-nightly-summary.json")
 
 
 def notify(title: str, msg: str) -> None:
@@ -47,30 +48,23 @@ def notify(title: str, msg: str) -> None:
         pass
 
 
-def report_to_chami(done_info: list[dict], n_skip: int, n_fail: int) -> None:
-    """완료를 헤르메스(기본 차미)에게 슬랙 텍스트로 인계 → 그쪽이 팀 보고를 올린다.
-    fire-and-forget(--no-wait): 야간 배치가 차미 응답을 기다리며 멈추지 않게."""
-    if not done_info:
-        return
-    titles = "\n".join(f"- {v.get('title', '')}" for v in done_info)
-    msg = (
-        f"{REPORT_AGENT}, TechBridge 야간 파이프라인이 방금 돌았어(신규 {len(done_info)}개 발행). "
-        f"이 채널에 팀 보고로 올려줘 — 보고 첫머리에 차드 멘션 `<@U08NU0U1VM4>` 꼭 넣고"
-        f"(다른 사람/에이전트는 멘션X)·CEO톤·짧게.\n\n"
-        f"[신규 학습노트]\n{titles}\n\n"
-        f"🔗 {PAGE_URL}\n"
-        f"확인법: 이 링크 열어 카드 수 / 맥 /tmp/techbridge-nightly.log "
-        f"(요약 노트{len(done_info)}·스킵{n_skip}·실패{n_fail})"
-    )
+def write_summary(done_info: list[dict], n_skip: int, n_fail: int) -> None:
+    """야간 결과를 JSON으로 기록. 차미 cron이 이 파일을 읽어 팀 보고를 작성·발행한다.
+    파이프라인은 '실행'만, '보고'는 차미가 — 매 실행마다 최신 결과로 덮어써 stale 재보고 방지."""
+    summary = {
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "n_note": len(done_info),
+        "n_skip": n_skip,
+        "n_fail": n_fail,
+        "page_url": PAGE_URL,
+        "new_notes": [{"title": v.get("title", ""), "url": v.get("url", "")} for v in done_info],
+    }
     try:
-        subprocess.run(
-            [SLACK_PY, "chami.py", "--agent", REPORT_AGENT, "-p", "techbridge-nightly",
-             "--new", "--no-wait", msg],
-            cwd=SLACK_DIR, text=True, capture_output=True, timeout=120,
-        )
-        print(f"[handoff] {REPORT_AGENT}에게 슬랙 보고 인계(신규 {len(done_info)})")
+        Path(SUMMARY_PATH).write_text(
+            json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"[summary] {SUMMARY_PATH} 기록 (신규 {len(done_info)}·스킵 {n_skip}·실패 {n_fail})")
     except Exception as exc:  # noqa: BLE001
-        print(f"[handoff] 슬랙 인계 실패(무시): {exc}")
+        print(f"[summary] 기록 실패(무시): {exc}")
 
 
 def score_title(title: str, kw: list[str]) -> float:
@@ -122,6 +116,7 @@ def main(argv=None) -> int:
 
     if not new:
         print("신규 영상 없음.")
+        write_summary([], 0, 0)  # 최신 결과로 갱신(차미 cron이 stale 파일 재보고하지 않게)
         return 0
 
     print(f"신규 {len(new)}개 · 큐레이션 임계 {THRESHOLD}")
@@ -156,7 +151,8 @@ def main(argv=None) -> int:
     if processed:
         vault_commit(cfg)
         step("publish_study_notes.py", "--all")
-        report_to_chami(done_info, len(skip), len(failed))  # 헤르메스에 슬랙 보고 인계
+
+    write_summary(done_info, len(skip), len(failed))  # 항상 최신 결과 기록 → 차미 cron이 읽어 보고
 
     notify("TechBridge 야간 완료",
            f"노트 {len(processed)} · 스킵 {len(skip)} · 실패 {len(failed)}")

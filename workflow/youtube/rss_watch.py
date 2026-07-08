@@ -15,6 +15,8 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
+import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -29,10 +31,23 @@ NS = {
 SEEN_FILE = "seen_videos.json"
 
 
-def fetch_feed(rss_url: str) -> list[dict]:
+def fetch_feed(rss_url: str, retries: int = 4, backoff: float = 2.0) -> list[dict]:
+    # YouTube RSS 엔드포인트는 간헐적 404/5xx를 뱉는다(로드밸런싱). 재시도로 흡수 —
+    # 한 방 실패로 야간 파이프라인 전체가 죽지 않게(2026-07-08 실검증에서 200→404→404 확인).
     req = urllib.request.Request(rss_url, headers={"User-Agent": "Mozilla/5.0 techbridge-watch"})
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        raw = resp.read()
+    raw = None
+    for attempt in range(1, retries + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                raw = resp.read()
+            break
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as exc:
+            code = getattr(exc, "code", None)
+            transient = code in (404, 429, 500, 502, 503, 504) or code is None
+            if attempt == retries or not transient:
+                raise
+            print(f"[rss] {code or exc} — 재시도 {attempt}/{retries - 1}", file=sys.stderr)
+            time.sleep(backoff * attempt)
     root = ET.fromstring(raw)
     out = []
     for entry in root.findall("a:entry", NS):
