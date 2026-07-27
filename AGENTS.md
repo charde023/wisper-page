@@ -84,7 +84,7 @@ python workflow\youtube\rebuild_index.py                       # 인덱스 갱�
 - 전사 전용 모드는 산출물(`결과물/<제목>.md`) 존재 + 화자구분/요지표 포함 여부로 검증.
 
 ## MAP 인덱스
-- 없음(단일 영역, 워크플로우 도구 중심). 서브워크플로우(YouTube 지식화)가 별도 영역으로 커지면 `workflow/youtube_MAP.md` 승격 검토.
+- 없음(단일 영역, 워크플로우 도구 중심). 서브워크플로우(YouTube 지식화, `workflow/youtube/`)가 더 커지면 그때 가서 별도 MAP 승격 검토(현재 실재 MAP 파일 없음 — 2026-07-27 죽은 포인터 정리).
 
 ## 문서 지도
 - 헌장(불변식·로드맵·게이트·열린결정): `docs/CHARTER.md` — 페이즈 착수 전 항상 먼저 읽는다(`cha-dev-phase` Phase 0).
