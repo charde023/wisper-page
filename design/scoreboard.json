@@ -1,0 +1,43 @@
+{
+  "project": "wisper-page",
+  "updated": "2026-08-01T08:34:24",
+  "stages": [
+    {
+      "id": "기획",
+      "type": "hybrid",
+      "score": 9.2,
+      "gate": "pass",
+      "ts": "2026-08-01T08:34:24",
+      "note": "",
+      "evidence": "reviewer=codex(session 019fba72) 5R. 5.8/fail → 7.4 → 8.1 → 8.8 → 9.2/pass(안티패턴 0·missing 0). 보강: 영향범위표·Out of Scope 8항·필드계약+vaultRoot 계약·RSS 이후 duration 취득 순서(RSS엔 길이 없음)·자막 Track 모델·멱등 마이그레이션(copy)·summary 스키마 단일화·프루닝 부분집합 가드·파일별 변경명세+함수 시그니처·테스트 벡터 5종·페이즈별 롤백·DoD 10항 검증명령. 채점 후 종료코드/heartbeat 계약·격리 카운터 범위·captionLangs 관계 추가"
+    },
+    {
+      "id": "구현계획",
+      "type": "gate",
+      "gate": "pending",
+      "ts": null,
+      "checks": []
+    },
+    {
+      "id": "빌드",
+      "type": "gate",
+      "gate": "pending",
+      "ts": null,
+      "checks": []
+    },
+    {
+      "id": "완료",
+      "type": "gate",
+      "gate": "pending",
+      "ts": null,
+      "checks": []
+    },
+    {
+      "id": "머지CI",
+      "type": "gate",
+      "gate": "pending",
+      "ts": null,
+      "checks": []
+    }
+  ]
+}

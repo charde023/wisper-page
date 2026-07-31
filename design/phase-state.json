@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "project": "wisper-page",
+  "updated_at": "2026-07-31T23:51:28+00:00",
+  "phases": [
+    {
+      "id": "ssot",
+      "title": "SSOT",
+      "status": "completed",
+      "summary": "헌장·AGENTS·기준선 확인",
+      "items": [
+        {
+          "id": "ssot1",
+          "label": "헌장·AGENTS·기준선 확인",
+          "status": "completed",
+          "evidence": "CHARTER 불변식 7개·seen 152·노트 151"
+        }
+      ]
+    },
+    {
+      "id": "align",
+      "title": "Align",
+      "status": "completed",
+      "summary": "완료조건 합의",
+      "items": [
+        {
+          "id": "align1",
+          "label": "완료조건 합의",
+          "status": "completed",
+          "evidence": "기획서 9.2점판 DoD 10항으로 갈음"
+        }
+      ]
+    },
+    {
+      "id": "spec",
+      "title": "Spec",
+      "status": "completed",
+      "summary": "구현 계약",
+      "items": [
+        {
+          "id": "spec1",
+          "label": "구현 계약",
+          "status": "completed",
+          "evidence": "기획서가 SPEC 겸함(스키마·시그니처·테스트벡터)"
+        }
+      ]
+    },
+    {
+      "id": "plan",
+      "title": "Plan",
+      "status": "completed",
+      "summary": "티켓 분해",
+      "items": [
+        {
+          "id": "plan1",
+          "label": "티켓 분해",
+          "status": "completed",
+          "evidence": "P0~P7 수직 슬라이스"
+        }
+      ]
+    },
+    {
+      "id": "build",
+      "title": "Build",
+      "status": "in_progress",
+      "summary": "P1·P2 완료, P3(자막 경로) 다음",
+      "items": [
+        {
+          "id": "P0",
+          "label": "기준선 스냅샷",
+          "status": "completed",
+          "evidence": "seen 152·노트 151·venv whisper-mlx 확정"
+        },
+        {
+          "id": "P1",
+          "label": "channels[] 스키마·로더",
+          "status": "completed",
+          "evidence": "test_channels_config 17/17 GREEN·keywords.json(ai 42+startup 43)"
+        },
+        {
+          "id": "P2",
+          "label": "seen 상태 채널별 이관",
+          "status": "completed",
+          "evidence": "152개 copy+백업, 멱등 재실행 무변경, test_migrate_state 10/10"
+        },
+        {
+          "id": "P3",
+          "label": "자막 경로(caption_fetch)",
+          "status": "pending",
+          "evidence": "미착수"
+        },
+        {
+          "id": "P4",
+          "label": "노트·인덱스 채널화",
+          "status": "pending",
+          "evidence": "미착수"
+        },
+        {
+          "id": "P5",
+          "label": "다채널 발행·프루닝 가드",
+          "status": "pending",
+          "evidence": "미착수"
+        },
+        {
+          "id": "P6",
+          "label": "파일럿 E2E",
+          "status": "pending",
+          "evidence": "미착수"
+        },
+        {
+          "id": "P7",
+          "label": "야간 배선·관제탑",
+          "status": "pending",
+          "evidence": "미착수"
+        }
+      ]
+    },
+    {
+      "id": "gate",
+      "title": "Gate",
+      "status": "pending",
+      "summary": "",
+      "items": []
+    },
+    {
+      "id": "commit",
+      "title": "Commit",
+      "status": "pending",
+      "summary": "",
+      "items": []
+    },
+    {
+      "id": "handoff",
+      "title": "Handoff",
+      "status": "pending",
+      "summary": "",
+      "items": []
+    }
+  ],
+  "blockers": [],
+  "user_actions": [],
+  "next_prompt": ""
+}
