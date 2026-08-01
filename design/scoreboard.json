@@ -1,6 +1,6 @@
 {
   "project": "wisper-page",
-  "updated": "2026-08-01T10:05:32",
+  "updated": "2026-08-01T10:23:41",
   "stages": [
     {
       "id": "기획",
@@ -98,9 +98,26 @@
     {
       "id": "머지CI",
       "type": "gate",
-      "gate": "pending",
-      "ts": null,
-      "checks": []
+      "gate": "pass",
+      "ts": "2026-08-01T10:23:41",
+      "checks": [
+        {
+          "name": "push → PR #2 생성",
+          "ok": true
+        },
+        {
+          "name": "CI 없음(no checks) → 로컬 게이트 대체: 테스트 50 GREEN + dry 3채널 신규 0건",
+          "ok": true
+        },
+        {
+          "name": "차드 머지 승인 후 main 머지(148d02f), fast-forward 충돌 0",
+          "ok": true
+        },
+        {
+          "name": "브랜치 미삭제 — 다른 세션이 sigma/v2-표준구조에서 작업 중",
+          "ok": true
+        }
+      ]
     }
   ]
 }
