@@ -55,6 +55,8 @@ state/               seen_<key>.json · meta_cache_<key>.json · failures_<key>.
 
 **함정 6 — 채널 폴더가 이미 있을 수 있다.** Sequoia는 `학습노트/Sequoia Capital/`에 노트 3편이 2026-07-02부터 있었는데 `noteDir: "Sequoia"`로 적어 폴더가 둘로 갈렸다(2026-08-01 발견·합류). 채널을 추가할 때는 `ls 학습노트/`로 **기존 폴더명을 먼저 확인**하고 `noteDir`을 거기 맞춘다. 새로 만드는 것보다 합류가 이득이다 — 기존 노트가 발행 대상에 자동 편입된다.
 
+**함정 7 — heartbeat 계약이 코드 한 곳에만 있으면 안 된다.** `nightly.py`는 '성공 시에만 touch'를 지키는데, cron이 부르는 래퍼 `~/.hermes/scripts/youtube_study.sh`(구 `techbridge_nightly.sh`)가 **종료코드와 무관하게** `kr.techbridge.nightly`를 touch하고 있었다(2026-08-01 차미 응답에서 발각). 실패를 성공으로 위장하고 이름까지 어긋나 관제탑이 엉뚱한 잡을 봤다. **파이프라인이 cron 래퍼를 경유하면 래퍼도 같이 봐야 한다** — 래퍼는 차미 소유라 슬랙으로 수정 지시(직접 편집 금지). 2026-08-01 수리 완료 — 지금은 nightly.py만 touch한다.
+
 **안 한 것 1 — 백필.** 두 신규 채널의 과거 영상은 소급하지 않는다(신규 업로드부터). 필요하면 별도 1회성 실행.
 
 **안 한 것 2 — nightly의 구 평면 키 제거.** `config.json`에 `vaultNoteDir` 등 구 키를 **일부러 남겼다**. 이관 도중 구 코드가 돌아도 안 깨지게 하기 위함이고, `load_channels()`는 `channels[]`를 쓰며 구 키 무시를 로그로 알린다. 안정화되면 제거 가능.
@@ -63,7 +65,7 @@ state/               seen_<key>.json · meta_cache_<key>.json · failures_<key>.
 
 **안 한 것 4 — 랜딩 필터의 JS.** 순수 CSS(숨은 radio + `:has()`)로 구현했다. GitHub Pages 정적 파일에 JS를 넣으면 캐시·CSP·디버깅 표면이 는다.
 
-**신선도 계약** — `nightly.py`는 성공 시에만 `~/.gbrain/.heartbeat/kr.apom.youtube-study`를 touch한다. 전 채널 실패면 touch하지 않고 `exit 1` — 관제탑이 신선도 만료로 잡는다. exit 코드만 믿지 않는다.
+**신선도 계약** — 실제 실행 경로는 `차미 cron 'youtube-study'` → `~/.hermes/scripts/youtube_study.sh` (zsh 래퍼: venv activate·PATH·summary 경로 세팅 후 `python workflow/youtube/mac/nightly.py`) → nightly.py 다. `nightly.py`는 성공 시에만 `~/.gbrain/.heartbeat/kr.apom.youtube-study`를 touch한다. 전 채널 실패면 touch하지 않고 `exit 1` — 관제탑이 신선도 만료로 잡는다. exit 코드만 믿지 않는다.
 
 ## SSOT 조회 경로
 

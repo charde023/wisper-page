@@ -1,6 +1,6 @@
 {
   "project": "wisper-page",
-  "updated": "2026-08-01T09:53:50",
+  "updated": "2026-08-01T10:05:32",
   "stages": [
     {
       "id": "기획",
@@ -59,7 +59,7 @@
       "id": "완료",
       "type": "gate",
       "gate": "pass",
-      "ts": "2026-08-01T09:53:50",
+      "ts": "2026-08-01T10:05:32",
       "checks": [
         {
           "name": "트랩6종(이식성·glob·LF UTF-8·비파괴·임계값 상수·외부실패)",
@@ -82,7 +82,15 @@
           "ok": true
         },
         {
-          "name": "차미 cron 개명(youtube-study) 지시 발신 — 차미 응답 대기",
+          "name": "차미 cron 개명 완료(youtube-study·youtube_study.sh·0 23 * * *)",
+          "ok": true
+        },
+        {
+          "name": "래퍼 heartbeat 강제 touch 제거 — 신선도 계약 복구",
+          "ok": true
+        },
+        {
+          "name": "cron 경로 실전 리허설: 노트 1편 완주·발행 LIVE·heartbeat 정상·exit 0",
           "ok": true
         }
       ]

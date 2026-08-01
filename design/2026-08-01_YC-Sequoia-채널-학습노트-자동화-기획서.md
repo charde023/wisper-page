@@ -504,6 +504,8 @@ write_summary(results)                             # 항상 기록 (stale 재보
 
 heartbeat를 건너뛰면 관제탑이 신선도 만료로 잡아준다 — exit 코드만 믿지 않는다.
 
+**★래퍼 경유 주의(2026-08-01 발각)**: cron은 nightly.py를 직접 부르지 않고 zsh 래퍼 `~/.hermes/scripts/techbridge_nightly.sh`를 경유한다. 그 래퍼가 종료코드와 무관하게 구 이름 heartbeat를 touch하고 있어 위 계약이 무력화돼 있었다. **heartbeat 계약을 바꾸면 래퍼도 함께 고친다**(래퍼는 차미 소유 — 슬랙 지시).
+
 **격리 카운터에 세는 실패의 범위**: `state/failures_<key>.json`의 `count`는 **그 영상 고유의 실패만** 센다 — 트랙 없음·자막 파싱 실패·전사 실패·LLM 응답 불가(교정/노트). 반대로 **채널·환경 차원의 실패**(RSS 오류, 코덱스 프록시 다운, 설정 오류, 볼트 커밋·발행 실패)는 세지 않는다. 프록시가 사흘 죽었다고 멀쩡한 영상이 격리되면 안 된다.
 
 **`captionLangs`와 트랙 우선순위의 관계**: `captionLangs`는 **후보 언어 집합**(기본 `["en","en-orig"]`)이고, §3-2의 4단계 순서는 그 집합 안에서 적용되는 **선택 규칙**이다. 즉 `captionLangs`에 없는 언어는 수동 자막이어도 쓰지 않고, 집합 안에서는 `수동 > 자동`·`en > en-orig` 순으로 고른다. `captionLangs`를 비우면 자막 경로를 끄는 것과 같다(즉시 Whisper).
