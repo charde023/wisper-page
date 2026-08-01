@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "wisper-page",
-  "updated_at": "2026-08-01T00:22:05+00:00",
+  "updated_at": "2026-08-01T00:53:50+00:00",
   "phases": [
     {
       "id": "ssot",
@@ -146,9 +146,16 @@
     {
       "id": "handoff",
       "title": "Handoff",
-      "status": "pending",
-      "summary": "",
-      "items": []
+      "status": "completed",
+      "summary": "발행 완료·MAP 등록",
+      "items": [
+        {
+          "id": "H1",
+          "label": "라이브 발행·문서화",
+          "status": "completed",
+          "evidence": "study-notes 154편 LIVE(칩4·신규4편 200) · MAP 신설 · CHARTER 갱신 · 차미 cron 개명 지시 발신"
+        }
+      ]
     }
   ],
   "blockers": [],
