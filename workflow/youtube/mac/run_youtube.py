@@ -21,7 +21,9 @@ YT_DIR = Path(__file__).resolve().parent.parent  # workflow/youtube
 MAC = YT_DIR / "mac"
 if str(YT_DIR) not in sys.path:
     sys.path.insert(0, str(YT_DIR))
-from yt_lib import load_config, run_ytdlp  # noqa: E402
+from yt_lib import load_channels, load_config, run_ytdlp  # noqa: E402
+sys.path.insert(0, str(MAC))
+import caption_fetch  # noqa: E402
 
 
 def urls_from_queue(p: Path) -> list[str]:
@@ -40,17 +42,48 @@ def resolve_id(url: str, js: str) -> str | None:
     return lines[0].strip() if lines else None
 
 
+def fetch_meta_only(url: str, ws: Path, js: str) -> bool:
+    """오디오 없이 메타만 받아 youtube.json을 만든다(자막 경로용).
+
+    산출물 계약은 whisper 경로와 동일하게 유지한다 — 다운스트림(author_note·인덱스)이
+    transcript_source를 몰라도 되게(CHARTER '전사 산출물 계약 고정')."""
+    ws.mkdir(parents=True, exist_ok=True)
+    (ws / ".source-url").write_text(url, encoding="utf-8")
+    run_ytdlp(["--skip-download", "--write-info-json", "--no-warnings",
+               "-o", str(ws / "audio.%(ext)s"), url], js)
+    prov = YT_DIR / "extract_provenance.py"
+    if prov.exists():
+        subprocess.run([sys.executable, str(prov), "--workspace", str(ws)], check=False)
+    return (ws / "youtube.json").exists()
+
+
+def try_caption(url: str, ws: Path, ch, js: str) -> bool:
+    """자막 경로 1회 시도. 성공하면 True(전사 스킵), 실패하면 False(Whisper 폴백)."""
+    if not fetch_meta_only(url, ws, js):
+        print("[caption] youtube.json 생성 실패 → Whisper 폴백", file=sys.stderr)
+        return False
+    return caption_fetch.fetch_caption(url, ws, ch, js) is not None
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Batch fetch+transcribe (macOS/mlx).")
     ap.add_argument("--queue")
     ap.add_argument("--url", nargs="*")
     ap.add_argument("--root", default=str(YT_DIR.parents[1]))
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--channel", default=None, help="채널 key (자막 우선 여부를 결정)")
     ap.add_argument("--model", default=None)
     ap.add_argument("--language", default=None)
     a = ap.parse_args(argv)
 
     cfg = load_config()
+    ch = None
+    if a.channel:
+        _, chans = load_channels()
+        ch = next((c for c in chans if c.key == a.channel), None)
+        if ch is None:
+            print(f"ERROR: 채널 '{a.channel}' 을 설정에서 찾을 수 없다", file=sys.stderr)
+            return 1
     model = a.model or cfg.get("whisperModel", "mlx-community/whisper-large-v3-turbo")
     lang = a.language or cfg.get("whisperLanguage", "en")
     js = cfg.get("ytJsRuntime", "node")
@@ -78,6 +111,13 @@ def main(argv: list[str] | None = None) -> int:
             print("[transcribe] transcript.txt 존재 → 캐시 스킵")
             results.append(("cached", str(ws), "-"))
             continue
+
+        # 자막 우선 채널: 오디오 없이 자막으로 끝낼 수 있으면 전사 자체를 건너뛴다
+        if ch is not None and ch.transcript_source == "caption":
+            if try_caption(u, ws, ch, js):
+                results.append(("caption", str(ws), "-"))
+                continue
+            print("[transcribe] 자막 실패 → Whisper 폴백")
 
         # 페치
         print("[fetch] downloading audio...")
@@ -110,7 +150,7 @@ def main(argv: list[str] | None = None) -> int:
         results.append(("transcribed" if ok else "FAILED", str(ws),
                         "-" if ok else "no transcript"))
 
-    n_ok = sum(1 for s, *_ in results if s in ("transcribed", "cached"))
+    n_ok = sum(1 for s, *_ in results if s in ("transcribed", "cached", "caption"))
     print(f"\n{'=' * 56}\nSUMMARY  {n_ok}/{len(results)} ok\n{'=' * 56}")
     for st, ws, note in results:
         line = f"  {st:<12} {ws}"

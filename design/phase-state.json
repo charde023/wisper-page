@@ -1,0 +1,164 @@
+{
+  "version": 1,
+  "project": "wisper-page",
+  "updated_at": "2026-08-01T00:53:50+00:00",
+  "phases": [
+    {
+      "id": "ssot",
+      "title": "SSOT",
+      "status": "completed",
+      "summary": "헌장·AGENTS·기준선 확인",
+      "items": [
+        {
+          "id": "ssot1",
+          "label": "헌장·AGENTS·기준선 확인",
+          "status": "completed",
+          "evidence": "CHARTER 불변식 7개·seen 152·노트 151"
+        }
+      ]
+    },
+    {
+      "id": "align",
+      "title": "Align",
+      "status": "completed",
+      "summary": "완료조건 합의",
+      "items": [
+        {
+          "id": "align1",
+          "label": "완료조건 합의",
+          "status": "completed",
+          "evidence": "기획서 9.2점판 DoD 10항으로 갈음"
+        }
+      ]
+    },
+    {
+      "id": "spec",
+      "title": "Spec",
+      "status": "completed",
+      "summary": "구현 계약",
+      "items": [
+        {
+          "id": "spec1",
+          "label": "구현 계약",
+          "status": "completed",
+          "evidence": "기획서가 SPEC 겸함(스키마·시그니처·테스트벡터)"
+        }
+      ]
+    },
+    {
+      "id": "plan",
+      "title": "Plan",
+      "status": "completed",
+      "summary": "티켓 분해",
+      "items": [
+        {
+          "id": "plan1",
+          "label": "티켓 분해",
+          "status": "completed",
+          "evidence": "P0~P7 수직 슬라이스"
+        }
+      ]
+    },
+    {
+      "id": "build",
+      "title": "Build",
+      "status": "completed",
+      "summary": "P0~P7 완료",
+      "items": [
+        {
+          "id": "P0",
+          "label": "기준선 스냅샷",
+          "status": "completed",
+          "evidence": "seen 152·노트 151·venv whisper-mlx 확정"
+        },
+        {
+          "id": "P1",
+          "label": "channels[] 스키마·로더",
+          "status": "completed",
+          "evidence": "test_channels_config 17/17 GREEN·keywords.json(ai 42+startup 43)"
+        },
+        {
+          "id": "P2",
+          "label": "seen 상태 채널별 이관",
+          "status": "completed",
+          "evidence": "실환경 152개 이관·백업·멱등 / nightly --dry 신규 0건(하드게이트 통과)"
+        },
+        {
+          "id": "P3",
+          "label": "자막 경로(caption_fetch)",
+          "status": "completed",
+          "evidence": "YC 7322단어·SEQ 9320단어 실측, VTT 19테스트, 메타헤더 버그 수정"
+        },
+        {
+          "id": "P4",
+          "label": "노트·인덱스 채널화",
+          "status": "completed",
+          "evidence": "에이폼 관점 섹션 실작동, 이모지 0·하이라이트 0 준수"
+        },
+        {
+          "id": "P5",
+          "label": "다채널 발행·프루닝 가드",
+          "status": "completed",
+          "evidence": "칩4개·배지 정상, 무손실 149⊆154, prune_guard 4케이스"
+        },
+        {
+          "id": "P6",
+          "label": "파일럿 E2E",
+          "status": "completed",
+          "evidence": "YC·Sequoia 각 1편 완주 + 기존 Sequoia 3편 합류로 154편"
+        },
+        {
+          "id": "P7",
+          "label": "야간 배선·관제탑",
+          "status": "completed",
+          "evidence": "nightly 채널루프·백필방지·heartbeat 계약, 앵커 plist 승계, MAP 신설"
+        }
+      ]
+    },
+    {
+      "id": "gate",
+      "title": "Gate",
+      "status": "completed",
+      "summary": "하드게이트 통과",
+      "items": [
+        {
+          "id": "G1",
+          "label": "하드게이트 검증",
+          "status": "completed",
+          "evidence": "테스트 50 GREEN · 발행 무손실 · dry 신규 0건 · 트랩6종 · MAP 위반 0"
+        }
+      ]
+    },
+    {
+      "id": "commit",
+      "title": "Commit",
+      "status": "completed",
+      "summary": "2커밋 push",
+      "items": [
+        {
+          "id": "C1",
+          "label": "커밋·푸시",
+          "status": "completed",
+          "evidence": "3faebc0(P1·P2) + 4324257(P3~P7) origin/sigma/v2-표준구조"
+        }
+      ]
+    },
+    {
+      "id": "handoff",
+      "title": "Handoff",
+      "status": "completed",
+      "summary": "발행 완료·MAP 등록",
+      "items": [
+        {
+          "id": "H1",
+          "label": "라이브 발행·문서화",
+          "status": "completed",
+          "evidence": "study-notes 154편 LIVE(칩4·신규4편 200) · MAP 신설 · CHARTER 갱신 · 차미 cron 개명 지시 발신"
+        }
+      ]
+    }
+  ],
+  "blockers": [],
+  "user_actions": [],
+  "next_prompt": ""
+}

@@ -12,7 +12,7 @@ import re
 import sys
 from pathlib import Path
 
-from yt_lib import load_config
+from yt_lib import load_channels, load_config
 
 INDEX_FILE = "_목차.md"
 CREATOR_FILE = "_원작채널.md"
@@ -91,10 +91,10 @@ def collect(note_dir: Path) -> list[dict]:
     return notes
 
 
-def write_index(note_dir: Path, notes: list[dict]) -> None:
+def write_index(note_dir: Path, notes: list[dict], channel: str = "TechBridge-KR") -> None:
     notes_sorted = sorted(notes, key=lambda n: n["upload_date"], reverse=True)
     lines = [
-        "# TechBridge-KR 학습노트 목차",
+        f"# {channel} 학습노트 목차",
         "",
         "> 자동 생성 (`rebuild_index.py`). 영상별 학습노트 인덱스. 최신순.",
         "",
@@ -109,7 +109,8 @@ def write_index(note_dir: Path, notes: list[dict]) -> None:
     (note_dir / INDEX_FILE).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def write_creator_index(note_dir: Path, notes: list[dict]) -> None:
+def write_creator_index(note_dir: Path, notes: list[dict],
+                        channel: str = "TechBridge-KR") -> None:
     by_creator: dict[str, dict] = {}
     for n in notes:
         if not n["creator"]:
@@ -123,7 +124,7 @@ def write_creator_index(note_dir: Path, notes: list[dict]) -> None:
     lines = [
         "# 원작 채널 / 크리에이터 인덱스",
         "",
-        "> 자동 생성. TechBridge-KR이 큐레이션한 원작자별 참조 영상. 학습을 원작 소스로 확장하는 발판.",
+        f"> 자동 생성. {channel} 채널의 원작자별 참조 영상. 학습을 원작 소스로 확장하는 발판.",
         "",
         f"총 {len(by_creator)}명",
         "",
@@ -139,24 +140,44 @@ def write_creator_index(note_dir: Path, notes: list[dict]) -> None:
     (note_dir / CREATOR_FILE).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def main(argv: list[str] | None = None) -> int:
-    cfg = load_config()
-    parser = argparse.ArgumentParser(description="Rebuild TechBridge-KR Obsidian indexes.")
-    parser.add_argument("--dir", default=cfg.get("vaultNoteDir", ""), help="Note folder (default from config)")
-    args = parser.parse_args(argv)
-
-    if not args.dir:
-        print("ERROR: vaultNoteDir not set in config and --dir not given.", file=sys.stderr)
-        return 1
-    note_dir = Path(args.dir)
+def _rebuild_one(note_dir: Path, channel: str) -> int:
     if not note_dir.exists():
         note_dir.mkdir(parents=True, exist_ok=True)
         print(f"created note dir: {note_dir}")
-
     notes = collect(note_dir)
-    write_index(note_dir, notes)
-    write_creator_index(note_dir, notes)
-    print(f"indexed {len(notes)} notes -> {note_dir / INDEX_FILE}, {note_dir / CREATOR_FILE}")
+    write_index(note_dir, notes, channel)
+    write_creator_index(note_dir, notes, channel)
+    print(f"[{channel}] indexed {len(notes)} notes -> {note_dir / INDEX_FILE}")
+    return len(notes)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Rebuild Obsidian 학습노트 indexes.")
+    parser.add_argument("--dir", default=None, help="노트 폴더 직접 지정(단일, 하위호환)")
+    parser.add_argument("--channel", default=None, help="채널 key 하나만")
+    parser.add_argument("--name", default="TechBridge-KR", help="--dir 사용 시 표시할 채널명")
+    args = parser.parse_args(argv)
+
+    if args.dir:
+        return 0 if _rebuild_one(Path(args.dir), args.name) >= 0 else 1
+
+    try:
+        vault_root, channels = load_channels()
+    except ValueError as exc:
+        legacy = load_config().get("vaultNoteDir")
+        if not legacy:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+        return 0 if _rebuild_one(Path(legacy), args.name) >= 0 else 1
+
+    if args.channel:
+        channels = [c for c in channels if c.key == args.channel]
+        if not channels:
+            print(f"ERROR: 채널 '{args.channel}' 없음", file=sys.stderr)
+            return 1
+
+    total = sum(_rebuild_one(c.note_path(vault_root), c.name) for c in channels)
+    print(f"총 {total}개 노트 / 채널 {len(channels)}개")
     return 0
 
 
