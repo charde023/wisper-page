@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "wisper-page",
-  "updated_at": "2026-08-01T06:31:38+00:00",
+  "updated_at": "2026-08-01T06:44:57+00:00",
   "phases": [
     {
       "id": "ssot",
@@ -144,8 +144,8 @@
     {
       "id": "commit",
       "title": "Commit",
-      "status": "in_progress",
-      "summary": "볼트 2커밋 완료 · wisper-page 승인대기",
+      "status": "completed",
+      "summary": "볼트 2 + 레포 2 커밋",
       "items": [
         {
           "id": "c1",
@@ -156,17 +156,24 @@
         {
           "id": "c2",
           "label": "wisper-page 커밋",
-          "status": "pending",
-          "evidence": "CHARTER 불변식: push는 항상 차드 승인 후"
+          "status": "completed",
+          "evidence": "34af2b5 줄바꿈정규화 · 951ce85 숏츠기능"
         }
       ]
     },
     {
       "id": "handoff",
       "title": "Handoff",
-      "status": "pending",
-      "summary": "",
-      "items": []
+      "status": "completed",
+      "summary": "머지·배포 완료",
+      "items": [
+        {
+          "id": "h1",
+          "label": "머지·배포·문서",
+          "status": "completed",
+          "evidence": "PR #3 → main e8b9195 · 라이브 137개 숏츠404 · MAP/CHARTER 반영"
+        }
+      ]
     }
   ],
   "blockers": [],

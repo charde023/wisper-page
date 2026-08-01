@@ -1,6 +1,6 @@
 {
   "project": "wisper-page",
-  "updated": "2026-08-01T15:31:23",
+  "updated": "2026-08-01T15:44:57",
   "stages": [
     {
       "id": "기획",
@@ -88,9 +88,30 @@
     {
       "id": "머지CI",
       "type": "gate",
-      "gate": "pending",
-      "ts": "2026-08-01T15:31:23",
-      "note": "wisper-page 커밋·푸시는 차드 승인 대기(CHARTER 불변식: push는 항상 승인 후)"
+      "gate": "pass",
+      "ts": "2026-08-01T15:44:57",
+      "checks": [
+        {
+          "name": "push → PR #3 생성",
+          "ok": true
+        },
+        {
+          "name": "CI 없음(no checks) → 로컬 게이트로 대체: 영역 68 GREEN + 판정 스모크",
+          "ok": true
+        },
+        {
+          "name": "장수브랜치 점검: 뒤처짐 1(자기 머지커밋)·merge-tree 충돌 0",
+          "ok": true
+        },
+        {
+          "name": "차드 승인 후 main 머지(e8b9195)",
+          "ok": true
+        },
+        {
+          "name": "배포: 볼트=발행본 일치·변경 없음. 라이브 137개·숏츠 404·정상 200",
+          "ok": true
+        }
+      ]
     }
   ]
 }
