@@ -7,7 +7,7 @@
 
 | 하고 싶은 것 | 명령 |
 |---|---|
-| 야간 전체(모든 채널) | `python mac/nightly.py` — 차미 cron `youtube-nightly` 23시가 호출 |
+| 야간 전체(모든 채널) | `python mac/nightly.py` — 차미 cron `youtube-study` 23시가 호출 |
 | 감지·점수만 보기 | `python mac/nightly.py --dry` |
 | 한 채널만 | `python mac/nightly.py --channel yc --limit 1` |
 | 영상 1편 전사 | `python mac/run_youtube.py --channel yc --url <URL>` |
@@ -63,7 +63,7 @@ state/               seen_<key>.json · meta_cache_<key>.json · failures_<key>.
 
 **안 한 것 4 — 랜딩 필터의 JS.** 순수 CSS(숨은 radio + `:has()`)로 구현했다. GitHub Pages 정적 파일에 JS를 넣으면 캐시·CSP·디버깅 표면이 는다.
 
-**신선도 계약** — `nightly.py`는 성공 시에만 `~/.gbrain/.heartbeat/kr.apom.youtube-nightly`를 touch한다. 전 채널 실패면 touch하지 않고 `exit 1` — 관제탑이 신선도 만료로 잡는다. exit 코드만 믿지 않는다.
+**신선도 계약** — `nightly.py`는 성공 시에만 `~/.gbrain/.heartbeat/kr.apom.youtube-study`를 touch한다. 전 채널 실패면 touch하지 않고 `exit 1` — 관제탑이 신선도 만료로 잡는다. exit 코드만 믿지 않는다.
 
 ## SSOT 조회 경로
 

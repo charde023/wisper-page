@@ -24,7 +24,7 @@ status: 기획완료(구현 대기)
 | **큐레이션** | 채널별 키워드·임계·**길이 하한(8분)** 분리. YC/Sequoia는 창업·성장·제품·조직 축을 추가하지 않으면 현 AI/코딩 키워드로는 대부분 스킵된다 |
 | **발행 페이지** | `study-notes/` 그룹 **유지**(URL 안 바뀜). 랜딩에 채널 배지 + 필터 칩 추가, 카드 slug는 이미 `업로드일-영상ID`라 채널 간 충돌 없음 |
 | **볼트 저장** | `학습노트/Y-Combinator/` 신설 + **`학습노트/Sequoia Capital/` 는 기존 폴더 재사용**(2026-07-02부터 노트 3편 존재 — 구현 중 발견). 채널별 `_목차.md`·`_원작채널.md` |
-| **야간 배선** | 기존 `techbridge-nightly`(차미 cron 23시) 잡을 **`youtube-nightly`로 개명·확장**. 채널 루프 + 채널별 실패 격리 + 채널별 일일 상한 |
+| **야간 배선** | 기존 `techbridge-nightly`(차미 cron 23시) 잡을 **`youtube-study`로 개명·확장**. 채널 루프 + 채널별 실패 격리 + 채널별 일일 상한 |
 | **기본 볼륨** | 신규 채널 **하루 2편**·TechBridge 현행 **3편** 유지 = 합산 최대 **7편/일**(폭주 방지). 과거 영상 백필은 **기본 안 함** — 원하면 별도 1회성 실행 |
 
 **한 줄**: 파이프라인을 새로 짓는 게 아니라 "채널 1개용"으로 굳어 있는 곳 6군데를 배열로 풀고, 두 채널은 자막 경로를 태워 붙인다.
@@ -35,9 +35,9 @@ status: 기획완료(구현 대기)
 |---|---|---|
 | **차드**(유일 소비자) | 볼트 학습노트 폴더 3개, 웹 학습노트에 채널 필터 등장, 밤마다 노트 1~3편 증가(상한 7) | 노트 홍수로 읽지 않게 됨 → `dailyMax`·임계로 통제 |
 | **`study-notes` 웹페이지 독자** | 랜딩 헤더 문구·카드 배지 변경. **기존 URL 151개는 전부 그대로** | 프루닝 사고 시 기존 페이지 404 → P5 하드게이트 |
-| **볼트 야간 파이프라인**(`obsidian-organize-nightly`, 22시) | 학습노트 폴더가 3개로 늘어 링커·커밋 대상 증가 | 23시 youtube-nightly와 커밋 충돌 → 볼트 커밋은 `fetch`+`reset --soft origin/main` 현행 방식 유지 |
-| **차미 cron / 슬랙 보고** | 잡 이름 `techbridge-nightly` → `youtube-nightly`, summary JSON에 채널별 집계 추가 | 개명 누락 시 잡이 사라진 채로 조용히 안 돎 → P7에서 구잡 삭제 전 신잡 1회 성공 확인 |
-| **관제탑**(Monitoring-dashboard) | 카드 라벨 `kr.techbridge.nightly` → `kr.apom.youtube-nightly` | heartbeat 경로 불일치 시 "죽은 잡"으로 표시 → 앵커 plist·heartbeat 동시 교체 |
+| **볼트 야간 파이프라인**(`obsidian-organize-nightly`, 22시) | 학습노트 폴더가 3개로 늘어 링커·커밋 대상 증가 | 23시 youtube-study와 커밋 충돌 → 볼트 커밋은 `fetch`+`reset --soft origin/main` 현행 방식 유지 |
+| **차미 cron / 슬랙 보고** | 잡 이름 `techbridge-nightly` → `youtube-study`, summary JSON에 채널별 집계 추가 | 개명 누락 시 잡이 사라진 채로 조용히 안 돎 → P7에서 구잡 삭제 전 신잡 1회 성공 확인 |
+| **관제탑**(Monitoring-dashboard) | 카드 라벨 `kr.techbridge.nightly` → `kr.apom.youtube-study` | heartbeat 경로 불일치 시 "죽은 잡"으로 표시 → 앵커 plist·heartbeat 동시 교체 |
 | **코덱스 프록시**(:18080) | LLM 호출량 증가(교정+노트, 하루 최대 7편 = 3+2+2) | 큐 지연 → `dailyMax` 상한이 1차 방어 |
 
 운영 책임자 = 차드 단독(1인 운영, 별도 온콜 없음). 장애 시 통지 경로 = 기존 그대로(맥 데스크톱 알림 + 차미 슬랙 보고).
@@ -379,9 +379,9 @@ Sequoia는 `Sequoia Capital/`에 노트 3편(Jensen Huang·Logan Kilpatrick·Dav
 
 ### 3-8. 자동화 등록 (관제탑)
 
-- 차미 cron `techbridge-nightly` → **`youtube-nightly`**로 개명(호출 스크립트 동일, 인자만 확장).
-- 맥 앵커 plist `kr.techbridge.nightly.plist` → `kr.apom.youtube-nightly.plist`(동일하게 `Disabled=true` 모니터링 앵커, 23:00 유지). 구 plist는 `.retired-2026-08-01`로 보존.
-- heartbeat: 실행 성공 시 `~/.gbrain/.heartbeat/kr.apom.youtube-nightly` touch → 관제탑 registrar가 자동 발견.
+- 차미 cron `techbridge-nightly` → **`youtube-study`**로 개명(호출 스크립트 동일, 인자만 확장).
+- 맥 앵커 plist `kr.techbridge.nightly.plist` → `kr.apom.youtube-study.plist`(동일하게 `Disabled=true` 모니터링 앵커, 23:00 유지). 구 plist는 `.retired-2026-08-01`로 보존.
+- heartbeat: 실행 성공 시 `~/.gbrain/.heartbeat/kr.apom.youtube-study` touch → 관제탑 registrar가 자동 발견.
 - `cha-automation-register` 스킬 절차를 따른다. **관제탑에 안 보이면 만든 게 아니다.**
 
 ---
@@ -397,7 +397,7 @@ Sequoia는 `Sequoia Capital/`에 노트 3편(Jensen Huang·Logan Kilpatrick·Dav
 | **P4 노트·인덱스** | `author_note.py`·`rebuild_index.py` 채널 파라미터화 + 에이폼 적용 관점 섹션 | 채널당 노트 1개 생성, 볼트 규칙(이모지 금지·강조 2종·frontmatter) 준수 |
 | **P5 발행** | `publish_study_notes.py` 다채널 + 랜딩 필터·배지 + **프루닝 가드** | `--no-push` 로컬 빌드에서 3채널 카드 모두 노출 + **빌드 전 slug 집합 ⊆ 빌드 후 집합**(사라지는 slug 0개) — 하드 게이트 |
 | **P6 파일럿** | 채널별 1편 end-to-end 수동 실행 → 라이브 URL 검증 | `https://charde023.github.io/page/study-notes/` 에서 신규 노트 3개 확인 |
-| **P7 야간 배선** | nightly 채널 루프 + cron 개명 + plist 앵명 교체 + heartbeat + 관제탑 등록 + AGENTS.md·MAP 갱신 | 다음 날 아침 summary JSON에 채널별 집계, 관제탑 카드에 `youtube-nightly` 노출 |
+| **P7 야간 배선** | nightly 채널 루프 + cron 개명 + plist 앵명 교체 + heartbeat + 관제탑 등록 + AGENTS.md·MAP 갱신 | 다음 날 아침 summary JSON에 채널별 집계, 관제탑 카드에 `youtube-study` 노출 |
 
 병렬 가능: P3(자막)과 P4(노트)는 독립 트랙. P5는 P4 완료 후.
 
@@ -416,8 +416,8 @@ Sequoia는 `Sequoia Capital/`에 노트 3편(Jensen Huang·Logan Kilpatrick·Dav
 | `workflow/youtube/rebuild_index.py` | 변경 | `--channel` / 전체 순회, 헤더 문구 동적화 | P4 |
 | `workflow/youtube/mac/publish_study_notes.py` | 변경 | 다채널 수집·`channel` meta·랜딩 칩·**프루닝 가드** | P5 |
 | `workflow/youtube/mac/nightly.py` | 변경 | 채널 루프·실패 격리·채널별 집계 | P6·P7 |
-| `~/Library/LaunchAgents/kr.apom.youtube-nightly.plist` | 신규 | 모니터링 앵커(`Disabled=true`, 23:00) | P7 |
-| 차미 cron `techbridge-nightly` | 개명 | → `youtube-nightly` | P7 |
+| `~/Library/LaunchAgents/kr.apom.youtube-study.plist` | 신규 | 모니터링 앵커(`Disabled=true`, 23:00) | P7 |
+| 차미 cron `techbridge-nightly` | 개명 | → `youtube-study` | P7 |
 | `AGENTS.md` §YouTube 채널 지식화 | 변경 | 다채널 서술로 갱신 + `workflow/youtube_MAP.md` 신설·인덱스 등록 | P7 |
 
 **신규·변경 인터페이스** (구현자가 추측하지 않게 시그니처 고정):
@@ -645,7 +645,7 @@ heartbeat를 건너뛰면 관제탑이 신선도 만료로 잡아준다 — exit
 | 6 | 채널 실패 격리 | **외부 의존 없는 단위 테스트** `tests/test_channel_isolation.py`: `rss_watch.fetch_feed`를 채널별 고정 피드(각 2편)를 돌려주는 스텁으로 교체하고, `sequoia` 호출에서만 예외를 던진다. 전사·LLM·발행도 스텁 | `per_channel.sequoia.channel_error` 기록 + `n_note=0`, **yc·techbridge는 각 2편 노트 생성**, 프로세스 exit 0. 외부 네트워크·신규 영상에 의존하지 않아 언제 돌려도 같은 결과 |
 | 7 | 마이그레이션 안전 | 마이그레이션 후 `python3 mac/nightly.py --dry` | TechBridge **신규 0건**(151편 재감지 없음) |
 | 8 | 자막 경로 | YC 1편 처리 후 `youtube.json` | `transcript_source: "caption"`, `caption_quality: "ok"`, 단어수/분 ≥ 80 |
-| 9 | 관제탑 가시성 | 관제탑 대시보드에서 `kr.apom.youtube-nightly` 카드 확인 + `ls -la ~/.gbrain/.heartbeat/kr.apom.youtube-nightly` | 카드 존재 + heartbeat mtime이 당일 |
+| 9 | 관제탑 가시성 | 관제탑 대시보드에서 `kr.apom.youtube-study` 카드 확인 + `ls -la ~/.gbrain/.heartbeat/kr.apom.youtube-study` | 카드 존재 + heartbeat mtime이 당일 |
 | 10 | 라이브 검증 | 발행 1~2분 후 라이브 랜딩(`?v=N`)에서 카드 `href` slug를 전부 추출해 집합 `LIVE`를 만들고, 발행 직전 로컬 `AFTER` 집합과 비교 | `LIVE == AFTER`(양방향 일치). 개수가 아니라 집합으로 판정하며, 불일치 slug를 전부 출력 |
 
 1·7번은 **하드 게이트** — 실패 시 다음 페이즈로 넘어가지 않고 되돌린다.

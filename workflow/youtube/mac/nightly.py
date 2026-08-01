@@ -1,6 +1,6 @@
 """야간 오케스트레이터(다채널): 감시→큐레이션→전사→교정→노트→인덱스·커밋→발행→요약.
 
-차미(헤르메스) cron 'youtube-nightly'(매일 23시)이 --script로 호출. 멱등·부분실패 복구.
+차미(헤르메스) cron 'youtube-study'(매일 23시)이 --script로 호출. 멱등·부분실패 복구.
 결과는 SUMMARY_PATH(JSON)로만 방출 — 팀 보고 발행은 차미가 그 파일을 읽어 수행(파이프라인은 실행만).
 
 설계: design/2026-08-01_YC-Sequoia-채널-학습노트-자동화-기획서.md
@@ -40,7 +40,7 @@ from llm import healthy  # noqa: E402
 PY = sys.executable
 PAGE_URL = "https://charde023.github.io/page/study-notes/"
 SUMMARY_PATH = os.environ.get("TB_SUMMARY_PATH", "/tmp/techbridge-nightly-summary.json")
-HEARTBEAT = Path.home() / ".gbrain" / ".heartbeat" / "kr.apom.youtube-nightly"
+HEARTBEAT = Path.home() / ".gbrain" / ".heartbeat" / "kr.apom.youtube-study"
 QUARANTINE_AT = 3          # 연속 실패 N회면 격리(무한 재시도 방지)
 
 
