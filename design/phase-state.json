@@ -1,19 +1,25 @@
 {
   "version": 1,
   "project": "wisper-page",
-  "updated_at": "2026-08-01T00:53:50+00:00",
+  "updated_at": "2026-08-01T06:31:38+00:00",
   "phases": [
     {
       "id": "ssot",
       "title": "SSOT",
       "status": "completed",
-      "summary": "헌장·AGENTS·기준선 확인",
+      "summary": "숏츠 유입경로·기존 노트 전수 확인",
       "items": [
         {
-          "id": "ssot1",
-          "label": "헌장·AGENTS·기준선 확인",
+          "id": "s1",
+          "label": "숏츠 판정기준 실측",
           "status": "completed",
-          "evidence": "CHARTER 불변식 7개·seen 152·노트 151"
+          "evidence": "yt-dlp: 숏츠 aspect 0.56·35~55s / s-L0F92HCkg 156s·1.78=정상영상 → duration≤180 AND aspect<1.0"
+        },
+        {
+          "id": "s2",
+          "label": "기존 숏츠 노트 전수",
+          "status": "completed",
+          "evidence": "볼트 전수 스캔 18편(전부 TechBridge-KR)·YC/Sequoia 0편"
         }
       ]
     },
@@ -21,13 +27,13 @@
       "id": "align",
       "title": "Align",
       "status": "completed",
-      "summary": "완료조건 합의",
+      "summary": "삭제 범위 확정",
       "items": [
         {
-          "id": "align1",
-          "label": "완료조건 합의",
+          "id": "a1",
+          "label": "볼트 노트+페이지 둘 다 제거",
           "status": "completed",
-          "evidence": "기획서 9.2점판 DoD 10항으로 갈음"
+          "evidence": "차드 선택(2026-08-01) — 노트 남기면 --all 발행 때 페이지 부활"
         }
       ]
     },
@@ -35,13 +41,13 @@
       "id": "spec",
       "title": "Spec",
       "status": "completed",
-      "summary": "구현 계약",
+      "summary": "숏츠 제외 계약",
       "items": [
         {
-          "id": "spec1",
-          "label": "구현 계약",
+          "id": "sp1",
+          "label": "판정 단일출처 yt_lib.is_short()",
           "status": "completed",
-          "evidence": "기획서가 SPEC 겸함(스키마·시그니처·테스트벡터)"
+          "evidence": "duration_sec≤180 AND 0<aspect<1.0. 둘 중 하나라도 미상이면 숏츠 아님(보수적)"
         }
       ]
     },
@@ -49,13 +55,37 @@
       "id": "plan",
       "title": "Plan",
       "status": "completed",
-      "summary": "티켓 분해",
+      "summary": "티켓 5개",
       "items": [
         {
-          "id": "plan1",
-          "label": "티켓 분해",
+          "id": "p1",
+          "label": "판정함수+테스트(RED→GREEN)",
           "status": "completed",
-          "evidence": "P0~P7 수직 슬라이스"
+          "evidence": "티켓 확정"
+        },
+        {
+          "id": "p2",
+          "label": "nightly 메타조회 확장·숏츠 스킵",
+          "status": "completed",
+          "evidence": "티켓 확정"
+        },
+        {
+          "id": "p3",
+          "label": "run_youtube 수동실행 가드",
+          "status": "completed",
+          "evidence": "티켓 확정"
+        },
+        {
+          "id": "p4",
+          "label": "기존 노트18+페이지18 제거",
+          "status": "completed",
+          "evidence": "티켓 확정"
+        },
+        {
+          "id": "p5",
+          "label": "게이트·MAP·헌장 갱신",
+          "status": "completed",
+          "evidence": "티켓 확정"
         }
       ]
     },
@@ -63,55 +93,37 @@
       "id": "build",
       "title": "Build",
       "status": "completed",
-      "summary": "P0~P7 완료",
+      "summary": "5티켓 완료",
       "items": [
         {
-          "id": "P0",
-          "label": "기준선 스냅샷",
+          "id": "b1",
+          "label": "yt_lib.is_short() + 테스트",
           "status": "completed",
-          "evidence": "seen 152·노트 151·venv whisper-mlx 확정"
+          "evidence": "TDD RED 18실패 → GREEN 18통과. 임계 SHORTS_MAX_SEC=180.0·aspect<1.0"
         },
         {
-          "id": "P1",
-          "label": "channels[] 스키마·로더",
+          "id": "b2",
+          "label": "nightly 숏츠 스킵",
           "status": "completed",
-          "evidence": "test_channels_config 17/17 GREEN·keywords.json(ai 42+startup 43)"
+          "evidence": "fetch_duration→fetch_meta(구캐시 aspect없음 재조회)·n_short 집계·seen 마킹"
         },
         {
-          "id": "P2",
-          "label": "seen 상태 채널별 이관",
+          "id": "b3",
+          "label": "run_youtube 가드",
           "status": "completed",
-          "evidence": "실환경 152개 이관·백업·멱등 / nightly --dry 신규 0건(하드게이트 통과)"
+          "evidence": "resolve_id→resolve_meta. 라이브 E2E: TMd5rvh9fCU 35s/0.56 차단"
         },
         {
-          "id": "P3",
-          "label": "자막 경로(caption_fetch)",
+          "id": "b4",
+          "label": "기존 숏츠 18편 제거",
           "status": "completed",
-          "evidence": "YC 7322단어·SEQ 9320단어 실측, VTT 19테스트, 메타헤더 버그 수정"
+          "evidence": "볼트 152→134·목차 132 / 페이지 155→137·라이브 404 확인"
         },
         {
-          "id": "P4",
-          "label": "노트·인덱스 채널화",
+          "id": "b5",
+          "label": "MAP·헌장 갱신",
           "status": "completed",
-          "evidence": "에이폼 관점 섹션 실작동, 이모지 0·하이라이트 0 준수"
-        },
-        {
-          "id": "P5",
-          "label": "다채널 발행·프루닝 가드",
-          "status": "completed",
-          "evidence": "칩4개·배지 정상, 무손실 149⊆154, prune_guard 4케이스"
-        },
-        {
-          "id": "P6",
-          "label": "파일럿 E2E",
-          "status": "completed",
-          "evidence": "YC·Sequoia 각 1편 완주 + 기존 Sequoia 3편 합류로 154편"
-        },
-        {
-          "id": "P7",
-          "label": "야간 배선·관제탑",
-          "status": "completed",
-          "evidence": "nightly 채널루프·백필방지·heartbeat 계약, 앵커 plist 승계, MAP 신설"
+          "evidence": "MAP 함정6-a·6-b + CHARTER 불변식 1항 + proj_audit 위반 0"
         }
       ]
     },
@@ -122,40 +134,39 @@
       "summary": "하드게이트 통과",
       "items": [
         {
-          "id": "G1",
-          "label": "하드게이트 검증",
+          "id": "g1",
+          "label": "하드게이트 전항",
           "status": "completed",
-          "evidence": "테스트 50 GREEN · 발행 무손실 · dry 신규 0건 · 트랩6종 · MAP 위반 0"
+          "evidence": "테스트68·E2E 라이브·무손실 18=18 정확일치·트랩6종·MAP"
         }
       ]
     },
     {
       "id": "commit",
       "title": "Commit",
-      "status": "completed",
-      "summary": "2커밋 push",
+      "status": "in_progress",
+      "summary": "볼트 2커밋 완료 · wisper-page 승인대기",
       "items": [
         {
-          "id": "C1",
-          "label": "커밋·푸시",
+          "id": "c1",
+          "label": "볼트 커밋·푸시",
           "status": "completed",
-          "evidence": "3faebc0(P1·P2) + 4324257(P3~P7) origin/sigma/v2-표준구조"
+          "evidence": "c588bc8 노트18제거 · a943844 목차재생성 (메인볼트 ff-merge 완료)"
+        },
+        {
+          "id": "c2",
+          "label": "wisper-page 커밋",
+          "status": "pending",
+          "evidence": "CHARTER 불변식: push는 항상 차드 승인 후"
         }
       ]
     },
     {
       "id": "handoff",
       "title": "Handoff",
-      "status": "completed",
-      "summary": "발행 완료·MAP 등록",
-      "items": [
-        {
-          "id": "H1",
-          "label": "라이브 발행·문서화",
-          "status": "completed",
-          "evidence": "study-notes 154편 LIVE(칩4·신규4편 200) · MAP 신설 · CHARTER 갱신 · 차미 cron 개명 지시 발신"
-        }
-      ]
+      "status": "pending",
+      "summary": "",
+      "items": []
     }
   ],
   "blockers": [],

@@ -21,7 +21,7 @@ YT_DIR = Path(__file__).resolve().parent.parent  # workflow/youtube
 MAC = YT_DIR / "mac"
 if str(YT_DIR) not in sys.path:
     sys.path.insert(0, str(YT_DIR))
-from yt_lib import load_channels, load_config, run_ytdlp  # noqa: E402
+from yt_lib import is_short, load_channels, load_config, run_ytdlp  # noqa: E402
 sys.path.insert(0, str(MAC))
 import caption_fetch  # noqa: E402
 
@@ -36,10 +36,27 @@ def urls_from_queue(p: Path) -> list[str]:
     return out
 
 
-def resolve_id(url: str, js: str) -> str | None:
-    r = run_ytdlp(["--skip-download", "--no-warnings", "--print", "%(id)s", url], js)
-    lines = (r.stdout or "").strip().splitlines()
-    return lines[0].strip() if lines else None
+def _num(raw: str) -> float | None:
+    raw = (raw or "").strip()
+    if raw in ("", "NA", "None"):
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        return None
+
+
+def resolve_meta(url: str, js: str) -> tuple[str | None, float | None, float | None]:
+    """(video_id, duration_sec, aspect_ratio) — 한 번의 yt-dlp 호출로 같이 받는다.
+
+    id 해석은 어차피 하던 호출이라 숏츠 판정용 필드를 얹어도 호출 수가 늘지 않는다.
+    """
+    r = run_ytdlp(["--skip-download", "--no-warnings", "--print",
+                   "%(id)s|%(duration)s|%(aspect_ratio)s", url], js)
+    line = ((r.stdout or "").strip().splitlines() or [""])[0]
+    parts = line.split("|")
+    vid = parts[0].strip() if parts and parts[0].strip() else None
+    return vid, _num(parts[1] if len(parts) > 1 else ""), _num(parts[2] if len(parts) > 2 else "")
 
 
 def fetch_meta_only(url: str, ws: Path, js: str) -> bool:
@@ -99,9 +116,14 @@ def main(argv: list[str] | None = None) -> int:
     results: list[tuple[str, str, str]] = []
     for i, u in enumerate(urls, 1):
         print(f"\n{'=' * 56}\n[{i}/{len(urls)}] {u}\n{'=' * 56}")
-        vid = resolve_id(u, js)
+        vid, dur, aspect = resolve_meta(u, js)
         if not vid:
             results.append(("FAILED", u, "id 해석 실패"))
+            continue
+        # 야간 경로(nightly)만 막으면 수동 실행으로 새어 나간다 → 여기서도 판정한다.
+        if is_short(dur, aspect):
+            print(f"[skip] 숏츠라 전사하지 않는다 ({dur}s · aspect {aspect}) {u}")
+            results.append(("shorts-skip", u, "숏츠"))
             continue
         ws = Path(a.root) / "workspaces" / f"yt-{vid}"
 

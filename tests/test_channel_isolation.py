@@ -46,7 +46,7 @@ def harness(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(nightly, "ROOT", tmp_path)
     monkeypatch.setattr(nightly, "healthy", lambda: True)
     monkeypatch.setattr(nightly, "load_channels", lambda: (tmp_path / "vault", CHANNELS))
-    monkeypatch.setattr(nightly, "fetch_duration", lambda *a, **k: 1800.0)
+    monkeypatch.setattr(nightly, "fetch_meta", lambda *a, **k: (1800.0, 1.78))
     monkeypatch.setattr(nightly, "vault_commit", lambda *a, **k: None)
     monkeypatch.setattr(nightly, "notify", lambda *a, **k: None)
 

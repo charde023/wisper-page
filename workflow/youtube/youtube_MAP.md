@@ -24,12 +24,12 @@
 ```
 config.json          channels[] (머신 로컬·gitignored) + 구 평면 키 병존
 keywords.json        {"ai":[...], "startup":[...]} — keywordSet은 "ai+startup" 처럼 합집합
-yt_lib.py            Channel dataclass · load_channels() · load_keywords() · state_name()
+yt_lib.py            Channel dataclass · load_channels() · load_keywords() · state_name() · is_short()
 rss_watch.py         채널 RSS 폴링(404 재시도 4회 — YouTube가 간헐적으로 뱉는다)
 curate.py            제목 점수(topic·concept·speaker·view)
 rebuild_index.py     채널별 _목차.md · _원작채널.md
 mac/
-  nightly.py         오케스트레이터: 채널 루프 · 실패 격리 · summary
+  nightly.py         오케스트레이터: 채널 루프 · 실패 격리 · summary · fetch_meta(길이+화면비)
   run_youtube.py     페치+전사 (caption 우선 → whisper 폴백)
   caption_fetch.py   자막 트랙 선택 · VTT 파싱 · 품질 게이트
   yt_fetch.py        오디오 다운로드(whisper 경로)
@@ -52,6 +52,10 @@ state/               seen_<key>.json · meta_cache_<key>.json · failures_<key>.
 **함정 4 — 자동자막에 메타 헤더가 섞인다.** yt-dlp 자동자막은 `WEBVTT` 뒤에 `Kind: captions` / `Language: en`을 붙인다. 안 걸러내면 본문 첫 두 줄로 새어나온다(2026-08-01 실측으로 잡음). `>>` 화자 전환 마커는 **일부러 남긴다** — 자동자막의 유일한 화자 신호이고 교정 단계가 문단으로 바꾼다.
 
 **함정 5 — 채널 자체 실패와 영상 실패를 섞지 마라.** `ChannelResult.n_fail`은 "처리를 시도했으나 실패한 영상 수"다. RSS가 죽거나 설정이 틀린 경우는 `channel_error`에만 잡힌다. 섞으면 summary가 거짓말을 한다. 마찬가지로 격리 카운터(`failures_<key>.json`)는 **영상 고유 실패만** 센다 — 프록시가 사흘 죽었다고 멀쩡한 영상이 격리되면 안 된다.
+
+**함정 6-a — 숏츠는 길이만으로 못 자른다.** `s-L0F92HCkg`는 156초지만 aspect 1.78짜리 정상 강연이다. 반대로 `Gn30anFa_2U`는 제목에 `#Shorts` 마커가 없는데 55초·0.56 숏츠다. **길이도 제목도 단독으로는 오탐한다** → 판정은 `yt_lib.is_short(duration, aspect)` 하나뿐이고 계약은 `duration ≤ 180s AND 0 < aspect < 1.0`(AND). 180초는 YouTube Shorts 길이 상한(2024-10 이후 3분). 메타가 미상이면 **False(정상 영상 취급)** — 조회 실패로 진짜 강연을 조용히 버리는 쪽이 숏츠 한 편 전사보다 나쁘다. duration·aspect는 `fetch_meta`(야간)·`resolve_meta`(수동)가 **원래 하던 yt-dlp 호출 한 번에 같이** 받으므로 호출 수가 늘지 않는다. 야간만 막으면 수동 `--url` 실행으로 새어 나가므로 `run_youtube.py`에도 같은 가드를 둔다.
+
+**함정 6-b — meta_cache 구 엔트리엔 aspect가 없다.** `{duration, fetched_at}` 스키마로 캐시된 항목을 캐시 히트로 처리하면 aspect가 영영 `None`이 되어 숏츠가 통과한다. `fetch_meta`는 `"aspect" in hit` 일 때만 히트로 친다(구 엔트리는 1회 재조회 후 새 스키마로 덮음).
 
 **함정 6 — 채널 폴더가 이미 있을 수 있다.** Sequoia는 `학습노트/Sequoia Capital/`에 노트 3편이 2026-07-02부터 있었는데 `noteDir: "Sequoia"`로 적어 폴더가 둘로 갈렸다(2026-08-01 발견·합류). 채널을 추가할 때는 `ls 학습노트/`로 **기존 폴더명을 먼저 확인**하고 `noteDir`을 거기 맞춘다. 새로 만드는 것보다 합류가 이득이다 — 기존 노트가 발행 대상에 자동 편입된다.
 
@@ -82,6 +86,7 @@ state/               seen_<key>.json · meta_cache_<key>.json · failures_<key>.
 
 ```bash
 ~/.venvs/whisper-mlx/bin/python -m pytest tests/test_channels_config.py \
-  tests/test_migrate_state.py tests/test_caption_fetch.py tests/test_channel_isolation.py -q
+  tests/test_migrate_state.py tests/test_caption_fetch.py tests/test_channel_isolation.py \
+  tests/test_shorts_filter.py -q
 ```
 `tests/test_update_pages_index.py`는 이 영역과 무관하며 2026-08-01 현재 실패 상태다(다른 작업의 미완성 변경).
