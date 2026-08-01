@@ -39,8 +39,8 @@ yt-dlp --no-playlist --no-progress -f "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/best"
 ```
 다운로드 후: 제목 앞 `YYYY-MM-DD |`/`｜`는 최종 파일명 날짜로 사용, `[VIDEO_ID]` 제거, `ffprobe`로 duration·size 검증. 기존 페이지 있으면 재전사하지 않고 카탈로그에서 `published` 계열 상태로 연결.
 
-### YouTube 채널 지식화 — TechBridge-KR → Obsidian (별개 워크플로우)
-로컬 mp4→Pages와는 별개: YouTube 채널 영상을 전사해 **Obsidian 학습노트**로 만든다(Pages 배포 없음). 도구는 `workflow/youtube/`(README 참고), 전사 인프라(`transcribe.ps1`·`_template/transcribe.py`·manifest)는 위 파이프라인과 공유. 대상 채널: TechBridge-KR(`UC895rbZX2iXLTDfji7W4PfA`, 해외 AI/개발 강연 한글자막 큐레이션). 산출 대상: `C:\workspace\obsidian\charde_n\학습노트\TechBridge-KR\`. 설계: `docs/specs/2026-06-06-techbridge-knowledge-pipeline-design.md`, `docs/plans/2026-06-06-techbridge-knowledge-pipeline.md`.
+### YouTube 채널 지식화 — 다채널 → Obsidian (별개 워크플로우)
+로컬 mp4→Pages와는 별개: YouTube 채널 영상을 전사해 **Obsidian 학습노트**로 만든다(Pages 배포 없음). 도구는 `workflow/youtube/`(README 참고), 전사 인프라(`transcribe.ps1`·`_template/transcribe.py`·manifest)는 위 파이프라인과 공유. **대상 채널 3개**(설정 `workflow/youtube/config.json` 의 `channels[]` — 코드에 채널을 박지 않는다): TechBridge-KR(`UC895rbZX2iXLTDfji7W4PfA`, 한글자막 큐레이션, **Whisper 전사**) · Y Combinator(`UCcefcZRL2oaA_uBNeo5UOWg`) · Sequoia Capital(`UCWrF0oN6unbXrWsTN7RctTw`) — 뒤 둘은 영어 원어민이라 **자막(WebVTT) 우선**, 품질 미달 시 Whisper 폴백. 산출: `~/workspace/obsidian/charde_n/학습노트/<noteDir>/` (채널별 폴더 + `_목차.md`). 설계: `docs/specs/2026-06-06-techbridge-knowledge-pipeline-design.md`, `docs/plans/2026-06-06-techbridge-knowledge-pipeline.md`.
 
 핵심 사실: **오디오는 영어**, 한글자막은 burned-in이라 텍스트 추출 불가 → Whisper로 **영어 원본 전사**(`-Language auto`→en, 한글 자동자막 사용 금지). yt-dlp는 `--js-runtimes node` 필수, 음성만 받아 16k mono wav 직접 산출. 전사 종료코드는 무시(산출물 검증이 진실, `transcribe.ps1` 처리).
 
@@ -84,7 +84,7 @@ python workflow\youtube\rebuild_index.py                       # 인덱스 갱�
 - 전사 전용 모드는 산출물(`결과물/<제목>.md`) 존재 + 화자구분/요지표 포함 여부로 검증.
 
 ## MAP 인덱스
-- 없음(단일 영역, 워크플로우 도구 중심). 서브워크플로우(YouTube 지식화, `workflow/youtube/`)가 더 커지면 그때 가서 별도 MAP 승격 검토(현재 실재 MAP 파일 없음 — 2026-07-27 죽은 포인터 정리).
+- [`workflow/youtube/youtube_MAP.md`](workflow/youtube/youtube_MAP.md) — YouTube 채널 → Obsidian 학습노트 → Pages 발행. 다채널(TechBridge·YC·Sequoia) 설정·자막 우선 경로·프루닝 가드·seen 상태 함정. 이 영역 작업 착수 전 필독(2026-08-01 다채널화로 승격).
 
 ## 문서 지도
 - 헌장(불변식·로드맵·게이트·열린결정): `docs/CHARTER.md` — 페이즈 착수 전 항상 먼저 읽는다(`cha-dev-phase` Phase 0).

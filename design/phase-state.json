@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "wisper-page",
-  "updated_at": "2026-07-31T23:51:28+00:00",
+  "updated_at": "2026-07-31T23:58:23+00:00",
   "phases": [
     {
       "id": "ssot",
@@ -81,7 +81,7 @@
           "id": "P2",
           "label": "seen 상태 채널별 이관",
           "status": "completed",
-          "evidence": "152개 copy+백업, 멱등 재실행 무변경, test_migrate_state 10/10"
+          "evidence": "실환경 152개 이관·백업·멱등 / nightly --dry 신규 0건(하드게이트 통과)"
         },
         {
           "id": "P3",

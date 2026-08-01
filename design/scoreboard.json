@@ -1,6 +1,6 @@
 {
   "project": "wisper-page",
-  "updated": "2026-08-01T08:34:24",
+  "updated": "2026-08-01T08:58:23",
   "stages": [
     {
       "id": "기획",
@@ -14,9 +14,18 @@
     {
       "id": "구현계획",
       "type": "gate",
-      "gate": "pending",
-      "ts": null,
-      "checks": []
+      "gate": "pass",
+      "ts": "2026-08-01T08:58:23",
+      "checks": [
+        {
+          "name": "요구-작업 매핑(P0~P7 ↔ 파일별 명세 14파일)",
+          "ok": true
+        },
+        {
+          "name": "크로스아티팩트 모순 없음(시그니처 tuple 정합화 반영)",
+          "ok": true
+        }
+      ]
     },
     {
       "id": "빌드",

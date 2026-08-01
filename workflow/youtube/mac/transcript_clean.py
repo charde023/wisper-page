@@ -27,6 +27,14 @@ SYS = (
     "Output ONLY the cleaned English transcript text, no preamble."
 )
 
+# 자동자막(WebVTT) 입력일 때만 덧붙이는 지시. 자동자막은 마침표·대문자·화자 구분이 없다.
+SYS_CAPTION = (
+    " The input is a YouTube AUTO-GENERATED caption track: it has no punctuation, no "
+    "capitalization at sentence starts, and no speaker labels (a bare '>>' may mark a "
+    "speaker change). Restore sentence boundaries and punctuation, capitalize properly, "
+    "and convert '>>' turn markers into readable paragraph breaks. Do not invent content."
+)
+
 # 한 청크당 대략 문자 수(토큰 여유). 초과 시 문단 경계로 분할.
 CHUNK_CHARS = 12000
 
@@ -61,6 +69,10 @@ def main(argv=None) -> int:
 
     raw = (w / "transcript.txt").read_text(encoding="utf-8")
     meta = json.loads((w / "youtube.json").read_text(encoding="utf-8"))
+    sys_prompt = SYS
+    if str(meta.get("transcript_source", "")).startswith("caption"):
+        sys_prompt += SYS_CAPTION
+        print("[clean] 자막 입력 감지 → 문장부호·화자 복원 지시 추가")
     hints = (
         f"Title: {meta.get('title')}\n"
         f"Channel/Speaker: {meta.get('provenance', {}).get('creator') or meta.get('uploader')}\n"
@@ -75,7 +87,7 @@ def main(argv=None) -> int:
     cleaned = []
     for i, ch in enumerate(parts, 1):
         user = f"HINTS:\n{hints}\n\nTRANSCRIPT (part {i}/{len(parts)}):\n{ch}"
-        cleaned.append(chat(MODEL_CLEAN, SYS, user).strip())
+        cleaned.append(chat(MODEL_CLEAN, sys_prompt, user).strip())
         print(f"  clean part {i}/{len(parts)} ({len(ch)} chars)")
 
     text = "\n\n".join(cleaned).strip() + "\n"
