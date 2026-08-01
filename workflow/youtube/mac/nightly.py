@@ -33,7 +33,7 @@ sys.path.insert(0, str(MAC))
 
 import curate  # noqa: E402
 import rss_watch  # noqa: E402
-from yt_lib import (load_channels, load_config, load_keywords,  # noqa: E402
+from yt_lib import (is_short, load_channels, load_config, load_keywords,  # noqa: E402
                     read_state, run_ytdlp, state_name, write_state)
 from llm import healthy  # noqa: E402
 
@@ -49,6 +49,7 @@ class ChannelResult:
     key: str
     n_note: int = 0
     n_skip: int = 0
+    n_short: int = 0           # 숏츠로 제외한 수(n_skip 에도 포함 — 저가치 스킵의 한 종류)
     n_fail: int = 0            # 처리를 시도했으나 실패한 '영상' 수
     n_fallback: int = 0
     quarantined: list[dict] = field(default_factory=list)
@@ -77,23 +78,37 @@ def step(script: str, *args: str) -> bool:
     return r.returncode == 0
 
 
-def fetch_duration(url: str, key: str, vid: str, js: str) -> float | None:
-    """RSS엔 길이가 없다 → 점수 통과분만 1회 조회하고 캐시(기획서 §3-1b)."""
+def _num(raw: str) -> float | None:
+    raw = (raw or "").strip()
+    if raw in ("", "NA", "None"):
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        return None
+
+
+def fetch_meta(url: str, key: str, vid: str, js: str) -> tuple[float | None, float | None]:
+    """(duration_sec, aspect_ratio). RSS엔 둘 다 없다 → 점수 통과분만 1회 조회하고 캐시.
+
+    aspect 는 숏츠 판정에 쓴다(yt_lib.is_short). 한 번의 yt-dlp 호출로 같이 받으므로
+    숏츠 필터 때문에 호출이 늘지 않는다.
+    """
     cache_name = state_name("meta_cache", key)
     cache = read_state(cache_name) or {}
-    if vid in cache:
-        return cache[vid].get("duration")
-    r = run_ytdlp(["--skip-download", "--no-warnings", "--print", "%(duration)s", url], js)
-    raw = (r.stdout or "").strip().splitlines()
-    dur: float | None = None
-    if raw and raw[0].strip() not in ("", "NA", "None"):
-        try:
-            dur = float(raw[0].strip())
-        except ValueError:
-            dur = None
-    cache[vid] = {"duration": dur, "fetched_at": datetime.now().isoformat(timespec="seconds")}
+    hit = cache.get(vid)
+    if isinstance(hit, dict) and "aspect" in hit:      # 구 엔트리는 aspect가 없다 → 재조회
+        return hit.get("duration"), hit.get("aspect")
+    r = run_ytdlp(["--skip-download", "--no-warnings", "--print",
+                   "%(duration)s|%(aspect_ratio)s", url], js)
+    line = ((r.stdout or "").strip().splitlines() or [""])[0]
+    parts = line.split("|")
+    dur = _num(parts[0] if parts else "")
+    aspect = _num(parts[1] if len(parts) > 1 else "")
+    cache[vid] = {"duration": dur, "aspect": aspect,
+                  "fetched_at": datetime.now().isoformat(timespec="seconds")}
     write_state(cache_name, cache)
-    return dur
+    return dur, aspect
 
 
 def bump_failure(key: str, vid: str, title: str, reason: str) -> int:
@@ -150,10 +165,16 @@ def run_channel(ch, vault_root: Path, limit: int = 0, dry: bool = False) -> Chan
         (scored if sc >= ch.min_score else skipped).append(v)
     res.n_skip = len(skipped)
 
-    # 점수 통과분만 길이 조회(호출 절약) → 길이 필터
+    # 점수 통과분만 메타 조회(호출 절약) → 숏츠 제외 → 길이 필터
     todo = []
     for v in scored:
-        dur = fetch_duration(v["url"], ch.key, v["id"], js)
+        dur, aspect = fetch_meta(v["url"], ch.key, v["id"], js)
+        if is_short(dur, aspect):
+            print(f"[{ch.key}] 숏츠 제외 {dur}s·{aspect}  {v['title'][:40]}")
+            skipped.append(v)
+            res.n_short += 1
+            res.n_skip += 1
+            continue
         if ch.min_duration_min and dur and dur / 60.0 < ch.min_duration_min:
             print(f"[{ch.key}] 길이 미달 {int(dur/60)}분 < {ch.min_duration_min}분  {v['title'][:40]}")
             skipped.append(v)
@@ -219,14 +240,15 @@ def vault_commit(vault_root: Path) -> None:
 
 
 def write_summary(results: list[ChannelResult]) -> None:
-    per = {r.key: {"n_note": r.n_note, "n_skip": r.n_skip, "n_fail": r.n_fail,
-                   "n_fallback": r.n_fallback, "channel_error": r.error,
-                   "quarantined": r.quarantined} for r in results}
+    per = {r.key: {"n_note": r.n_note, "n_skip": r.n_skip, "n_short": r.n_short,
+                   "n_fail": r.n_fail, "n_fallback": r.n_fallback,
+                   "channel_error": r.error, "quarantined": r.quarantined} for r in results}
     summary = {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "page_url": PAGE_URL,
         "n_note": sum(r.n_note for r in results),
         "n_skip": sum(r.n_skip for r in results),
+        "n_short": sum(r.n_short for r in results),
         "n_fail": sum(r.n_fail for r in results),
         "per_channel": per,
         "new_notes": [n for r in results for n in r.done_info],

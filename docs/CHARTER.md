@@ -16,6 +16,7 @@ created: 2026-07-03
 - **`charde023/page`는 정리본 전용** — 블로그·메모·실험 페이지 등 다른 성격 콘텐츠를 얹지 않는다.
 - **guide.md는 lint 통과 없이 배포하지 않는다** — `workflow/lint_guide.py` 게이트 필수.
 - **전사 산출물 계약 고정**: `transcript.txt`·`segments.json`·`transcript.srt`·완료 센티넬(`transcribe.done`/`pipeline.json` 스탬프)의 형식·경로는 엔진(faster-whisper/mlx-whisper 등)이 바뀌어도 동일하게 유지한다 — 다운스트림(노트화·인덱스 재구성)이 무수정으로 재사용 가능해야 한다.
+- **YouTube Shorts는 감지·전사·발행 대상이 아니다** — 판정은 `yt_lib.is_short()` 단일 출처(`duration ≤ 180s AND 0 < aspect < 1.0`). 길이 단독·제목 `#Shorts` 단독은 오탐하므로 쓰지 않는다. 야간(`nightly.py`)과 수동(`run_youtube.py`) 두 경로 모두에서 막는다.
 - **YouTube 지식화 서브워크플로우는 전사 인프라만 공유**하고 발행 목적(Obsidian 학습노트 vs GitHub Pages 가이드)은 분리 유지한다.
 
 ## 로드맵 (페이즈 상태)

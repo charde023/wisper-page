@@ -1,28 +1,26 @@
 {
   "project": "wisper-page",
-  "updated": "2026-08-01T10:23:41",
+  "updated": "2026-08-01T15:31:23",
   "stages": [
     {
       "id": "기획",
-      "type": "hybrid",
-      "score": 9.2,
-      "gate": "pass",
-      "ts": "2026-08-01T08:34:24",
-      "note": "",
-      "evidence": "reviewer=codex(session 019fba72) 5R. 5.8/fail → 7.4 → 8.1 → 8.8 → 9.2/pass(안티패턴 0·missing 0). 보강: 영향범위표·Out of Scope 8항·필드계약+vaultRoot 계약·RSS 이후 duration 취득 순서(RSS엔 길이 없음)·자막 Track 모델·멱등 마이그레이션(copy)·summary 스키마 단일화·프루닝 부분집합 가드·파일별 변경명세+함수 시그니처·테스트 벡터 5종·페이즈별 롤백·DoD 10항 검증명령. 채점 후 종료코드/heartbeat 계약·격리 카운터 범위·captionLangs 관계 추가"
+      "type": "gate",
+      "gate": "skipped",
+      "ts": "2026-08-01T15:31:23",
+      "note": "기획서 없이 진행 — 요구가 1문장으로 확정적이고 판정기준을 실측으로 고정(cha-dev-phase §0 최소 SSOT)"
     },
     {
       "id": "구현계획",
       "type": "gate",
       "gate": "pass",
-      "ts": "2026-08-01T08:58:23",
+      "ts": "2026-08-01T15:31:23",
       "checks": [
         {
-          "name": "요구-작업 매핑(P0~P7 ↔ 파일별 명세 14파일)",
+          "name": "판정기준을 추측 아닌 실측으로 확정(후보 19편 yt-dlp 전수)",
           "ok": true
         },
         {
-          "name": "크로스아티팩트 모순 없음(시그니처 tuple 정합화 반영)",
+          "name": "요구-티켓 매핑 5건(판정함수·야간·수동·기존제거·문서)",
           "ok": true
         }
       ]
@@ -31,26 +29,26 @@
       "id": "빌드",
       "type": "gate",
       "gate": "pass",
-      "ts": "2026-08-01T09:22:05",
+      "ts": "2026-08-01T15:31:23",
       "checks": [
         {
-          "name": "자동테스트 50개 GREEN(로더17·이관10·자막19·격리4)",
+          "name": "자동테스트 68 GREEN(신규 숏츠 18 + 기존 50)",
           "ok": true
         },
         {
-          "name": "E2E: YC·Sequoia 각 1편 자막→노트 완주",
+          "name": "TDD RED→GREEN(선 18실패 → 후 18통과)",
           "ok": true
         },
         {
-          "name": "발행 무손실 149 ⊆ 154 (집합 포함 판정)",
+          "name": "네거티브: 156s/1.78 정상영상 오탐 0 · 메타미상 시 통과",
           "ok": true
         },
         {
-          "name": "불변식 회귀: nightly --dry 3채널 신규 0건",
+          "name": "E2E 라이브: 숏츠 URL 수동실행 차단·정상영상 통과",
           "ok": true
         },
         {
-          "name": "typecheck·빌드 = 해당없음(파이썬, 빌드 단계 없음)",
+          "name": "typecheck·빌드 = 해당없음(파이썬·빌드단계 없음)",
           "ok": true
         }
       ]
@@ -59,38 +57,30 @@
       "id": "완료",
       "type": "gate",
       "gate": "pass",
-      "ts": "2026-08-01T10:05:32",
+      "ts": "2026-08-01T15:31:23",
       "checks": [
         {
-          "name": "트랩6종(이식성·glob·LF UTF-8·비파괴·임계값 상수·외부실패)",
+          "name": "기존 숏츠 볼트노트 18편 제거(152→134, 목차 132)",
           "ok": true
         },
         {
-          "name": "MAP 신설 + AGENTS 인덱스 등록(proj_audit 위반 0)",
+          "name": "발행 페이지 18개 제거 — 리포 137 slug·라이브 404 전파 확인",
           "ok": true
         },
         {
-          "name": "CHARTER 로드맵 갱신(P2·P3 완료 반영 + P4 신설)",
+          "name": "무손실: 사라진 slug 18 = 실측 숏츠 18 정확 일치(s-L0F92HCkg 보존)",
           "ok": true
         },
         {
-          "name": "관제탑 앵커 kr.apom.youtube-study 승계 + heartbeat 계약",
+          "name": "트랩6종 — 이식성·비파괴(prune_guard 명시확인)·임계값 상수화·외부실패 시 통과",
           "ok": true
         },
         {
-          "name": "라이브 발행 검증: 154카드·칩4개·신규4편 HTTP 200",
+          "name": "MAP 함정6-a/6-b 추가 + CHARTER 불변식 1항 + proj_audit 위반 0",
           "ok": true
         },
         {
-          "name": "차미 cron 개명 완료(youtube-study·youtube_study.sh·0 23 * * *)",
-          "ok": true
-        },
-        {
-          "name": "래퍼 heartbeat 강제 touch 제거 — 신선도 계약 복구",
-          "ok": true
-        },
-        {
-          "name": "cron 경로 실전 리허설: 노트 1편 완주·발행 LIVE·heartbeat 정상·exit 0",
+          "name": "⚠ yt_lib.py CRLF는 HEAD부터 레거시 — 이번 변경 원인 아님, 별건 이월",
           "ok": true
         }
       ]
@@ -98,26 +88,9 @@
     {
       "id": "머지CI",
       "type": "gate",
-      "gate": "pass",
-      "ts": "2026-08-01T10:23:41",
-      "checks": [
-        {
-          "name": "push → PR #2 생성",
-          "ok": true
-        },
-        {
-          "name": "CI 없음(no checks) → 로컬 게이트 대체: 테스트 50 GREEN + dry 3채널 신규 0건",
-          "ok": true
-        },
-        {
-          "name": "차드 머지 승인 후 main 머지(148d02f), fast-forward 충돌 0",
-          "ok": true
-        },
-        {
-          "name": "브랜치 미삭제 — 다른 세션이 sigma/v2-표준구조에서 작업 중",
-          "ok": true
-        }
-      ]
+      "gate": "pending",
+      "ts": "2026-08-01T15:31:23",
+      "note": "wisper-page 커밋·푸시는 차드 승인 대기(CHARTER 불변식: push는 항상 승인 후)"
     }
   ]
 }

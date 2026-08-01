@@ -210,6 +210,26 @@ def load_channels() -> tuple[Path, list[Channel]]:
     return root, active
 
 
+SHORTS_MAX_SEC = 180.0     # YouTube Shorts 길이 상한(2024-10 이후 3분)
+
+
+def is_short(duration_sec: Any, aspect_ratio: Any) -> bool:
+    """숏츠 판정 — 길이와 세로 화면비의 AND. 판정 로직 단일 출처.
+
+    길이만으로 자르면 오탐한다: s-L0F92HCkg 는 156초지만 aspect 1.78 짜리 정상 강연이다.
+    제목의 '#Shorts' 도 못 믿는다 — Gn30anFa_2U 는 마커 없이 55초·0.56 이다.
+    메타가 미상이면 False(정상 영상 취급) — 조회 실패로 진짜 강연을 조용히 버리는 쪽이 더 나쁘다.
+    """
+    try:
+        dur = float(duration_sec)
+        aspect = float(aspect_ratio)
+    except (TypeError, ValueError):
+        return False
+    if dur <= 0 or aspect <= 0:
+        return False
+    return dur <= SHORTS_MAX_SEC and aspect < 1.0
+
+
 def state_name(base: str, key: str) -> str:
     """("seen","yc") → "seen_yc.json" — 채널별 상태 파일명 규칙(단일 출처)."""
     return f"{base}_{key}.json"
