@@ -1,0 +1,26 @@
+# 줄바꿈은 LF로 고정한다.
+# 이 레포는 시그마(Windows)에서 시작해 맥으로 이전했다. 그때 체크아웃된 파일 일부가
+# 작업트리에 CRLF로 남아 있었고(2026-08-01 실측 19파일), 손대는 순간 전 줄이 바뀐
+# diff가 생겨 실제 변경을 덮었다. 아래 규칙으로 재발을 막는다.
+* text=auto eol=lf
+
+*.py   text eol=lf
+*.md   text eol=lf
+*.json text eol=lf
+*.js   text eol=lf
+*.ps1  text eol=lf
+*.txt  text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+
+# 바이너리는 건드리지 않는다.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.pdf  binary
+*.mp3  binary
+*.mp4  binary
+*.m4a  binary
+*.wav  binary
