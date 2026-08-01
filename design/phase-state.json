@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project": "wisper-page",
-  "updated_at": "2026-07-31T23:58:23+00:00",
+  "updated_at": "2026-08-01T00:22:05+00:00",
   "phases": [
     {
       "id": "ssot",
@@ -62,8 +62,8 @@
     {
       "id": "build",
       "title": "Build",
-      "status": "in_progress",
-      "summary": "P1·P2 완료, P3(자막 경로) 다음",
+      "status": "completed",
+      "summary": "P0~P7 완료",
       "items": [
         {
           "id": "P0",
@@ -86,48 +86,62 @@
         {
           "id": "P3",
           "label": "자막 경로(caption_fetch)",
-          "status": "pending",
-          "evidence": "미착수"
+          "status": "completed",
+          "evidence": "YC 7322단어·SEQ 9320단어 실측, VTT 19테스트, 메타헤더 버그 수정"
         },
         {
           "id": "P4",
           "label": "노트·인덱스 채널화",
-          "status": "pending",
-          "evidence": "미착수"
+          "status": "completed",
+          "evidence": "에이폼 관점 섹션 실작동, 이모지 0·하이라이트 0 준수"
         },
         {
           "id": "P5",
           "label": "다채널 발행·프루닝 가드",
-          "status": "pending",
-          "evidence": "미착수"
+          "status": "completed",
+          "evidence": "칩4개·배지 정상, 무손실 149⊆154, prune_guard 4케이스"
         },
         {
           "id": "P6",
           "label": "파일럿 E2E",
-          "status": "pending",
-          "evidence": "미착수"
+          "status": "completed",
+          "evidence": "YC·Sequoia 각 1편 완주 + 기존 Sequoia 3편 합류로 154편"
         },
         {
           "id": "P7",
           "label": "야간 배선·관제탑",
-          "status": "pending",
-          "evidence": "미착수"
+          "status": "completed",
+          "evidence": "nightly 채널루프·백필방지·heartbeat 계약, 앵커 plist 승계, MAP 신설"
         }
       ]
     },
     {
       "id": "gate",
       "title": "Gate",
-      "status": "pending",
-      "summary": "",
-      "items": []
+      "status": "completed",
+      "summary": "하드게이트 통과",
+      "items": [
+        {
+          "id": "G1",
+          "label": "하드게이트 검증",
+          "status": "completed",
+          "evidence": "테스트 50 GREEN · 발행 무손실 · dry 신규 0건 · 트랩6종 · MAP 위반 0"
+        }
+      ]
     },
     {
       "id": "commit",
       "title": "Commit",
-      "status": "pending",
-      "summary": "",
-      "items": []
+      "status": "completed",
+      "summary": "2커밋 push",
+      "items": [
+        {
+          "id": "C1",
+          "label": "커밋·푸시",
+          "status": "completed",
+          "evidence": "3faebc0(P1·P2) + 4324257(P3~P7) origin/sigma/v2-표준구조"
+        }
+      ]
     },
     {
       "id": "handoff",

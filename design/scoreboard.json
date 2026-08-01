@@ -1,6 +1,6 @@
 {
   "project": "wisper-page",
-  "updated": "2026-08-01T08:58:23",
+  "updated": "2026-08-01T09:22:05",
   "stages": [
     {
       "id": "기획",
@@ -30,16 +30,58 @@
     {
       "id": "빌드",
       "type": "gate",
-      "gate": "pending",
-      "ts": null,
-      "checks": []
+      "gate": "pass",
+      "ts": "2026-08-01T09:22:05",
+      "checks": [
+        {
+          "name": "자동테스트 50개 GREEN(로더17·이관10·자막19·격리4)",
+          "ok": true
+        },
+        {
+          "name": "E2E: YC·Sequoia 각 1편 자막→노트 완주",
+          "ok": true
+        },
+        {
+          "name": "발행 무손실 149 ⊆ 154 (집합 포함 판정)",
+          "ok": true
+        },
+        {
+          "name": "불변식 회귀: nightly --dry 3채널 신규 0건",
+          "ok": true
+        },
+        {
+          "name": "typecheck·빌드 = 해당없음(파이썬, 빌드 단계 없음)",
+          "ok": true
+        }
+      ]
     },
     {
       "id": "완료",
       "type": "gate",
-      "gate": "pending",
-      "ts": null,
-      "checks": []
+      "gate": "pass",
+      "ts": "2026-08-01T09:22:05",
+      "checks": [
+        {
+          "name": "트랩6종(이식성·glob·LF UTF-8·비파괴·임계값 상수·외부실패)",
+          "ok": true
+        },
+        {
+          "name": "MAP 신설 + AGENTS 인덱스 등록(proj_audit 위반 0)",
+          "ok": true
+        },
+        {
+          "name": "CHARTER 로드맵 갱신(P2·P3 완료 반영 + P4 신설)",
+          "ok": true
+        },
+        {
+          "name": "관제탑 앵커 kr.apom.youtube-nightly 승계 + heartbeat 계약",
+          "ok": true
+        },
+        {
+          "name": "차미 cron 개명은 미완(차드 승인 필요) — 스크립트 경로 동일해 기능은 동작",
+          "ok": false
+        }
+      ]
     },
     {
       "id": "머지CI",
