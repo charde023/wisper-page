@@ -1,6 +1,6 @@
 # AGENTS.md
 > 이 레포의 문서·주석·커밋은 한국어. 같은 톤으로 작업한다.
-> 지침 SSOT는 이 파일(에이전트 공용 — Claude·Codex). `CLAUDE.md`는 `@AGENTS.md` 한 줄. 표준 → 스킬 `cha-proj-init`.
+> 지침 SSOT는 이 파일(에이전트 공용 — Claude·Codex). `CLAUDE.md`는 `@AGENTS.md` 한 줄.
 
 ## 무엇인가
 지피터스 스터디 라이브 강의 mp4를 모바일 최적화 GitHub Pages 보고서로 변환하는 워크플로우. 새 영상이 들어오면 아래 7단계를 자동 진행한다. 별개 서브워크플로우로 YouTube 채널(TechBridge-KR) 전사 → Obsidian 학습노트화도 지원(§YouTube 지식화).
@@ -87,7 +87,7 @@ python workflow\youtube\rebuild_index.py                       # 인덱스 갱�
 - [`workflow/youtube/youtube_MAP.md`](workflow/youtube/youtube_MAP.md) — YouTube 채널 → Obsidian 학습노트 → Pages 발행. 다채널(TechBridge·YC·Sequoia) 설정·자막 우선 경로·프루닝 가드·seen 상태 함정. 이 영역 작업 착수 전 필독(2026-08-01 다채널화로 승격).
 
 ## 문서 지도
-- 헌장(불변식·로드맵·게이트·열린결정): `docs/CHARTER.md` — 페이즈 착수 전 항상 먼저 읽는다(`cha-dev-phase` Phase 0).
+- 헌장(불변식·로드맵·게이트·열린결정): `docs/CHARTER.md` — 페이즈 착수 전 항상 먼저 읽는다.
 - 의사결정 히스토리: `docs/specs/2026-05-19-video-to-pages-workflow-design.md`(설계서), `docs/plans/2026-05-19-video-to-pages-workflow.md`(실행계획), `docs/specs/2026-06-06-techbridge-knowledge-pipeline-design.md`·`docs/plans/2026-06-06-techbridge-knowledge-pipeline.md`(YouTube 지식화)
 - 최신 기획서(구현 대기): `docs/design/2026-07-02_맥-로컬-전사-파이프라인-기획서.md`+`_구현계획서.md`(P2 맥 이식), `docs/design/2026-07-02_학습노트-자동화-파이프라인-기획서.md`+`_구현계획서.md`(P3 무인 자동화)
 - 신규 설계·기획 산출물 저장 위치(표준): `design/`(현재 비어있음 — 기존 문서는 위 `docs/design/`에 레거시 배치, 안내는 `design/.keep` 참고)
