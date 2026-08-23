@@ -3,7 +3,8 @@
 영어 원어민 채널(YC·Sequoia)은 자막이 이미 있어 Whisper 전사를 건너뛴다.
 자막이 없거나 부실하면 None을 돌려 호출자가 Whisper로 폴백하게 한다.
 
-트랙 우선순위: 수동 en → 수동 en-* → 자동 en-orig → 자동 en (captionLangs 집합 안에서만)
+트랙 우선순위(언어 무관): 수동 <lang> → 수동 <lang>-* → 자동 <lang>-orig → 자동 <lang>
+(captionLangs 집합 안에서만. 한국어 채널은 captionLangs=["ko"]로 같은 규칙을 탄다)
 품질 게이트: 단어수 >= 200, wpm >= 80(경계 포함). duration 미상이면 밀도 검사 생략.
 
 Usage:
@@ -67,29 +68,43 @@ def list_tracks(url: str, js: str = "node") -> list[Track]:
     return out
 
 
-def _rank(t: Track) -> int:
-    if t.is_manual:
-        if t.lang == "en":
-            return 0
-        if t.lang.startswith("en"):
-            return 1
-    else:
-        if t.lang == "en-orig":
-            return 2
-        if t.lang == "en":
-            return 3
-        if t.lang.startswith("en"):
-            return 4
-    return 99
+MISS = 99999          # prefer 어디에도 걸리지 않음 = 후보 아님
+
+
+def _rank(t: Track, prefer: list[str] | tuple[str, ...]) -> int:
+    """prefer 순서 기준 순위. 언어 하드코딩 없음(en·ko 동일 규칙).
+
+    수동 자막이 자동보다 항상 앞선다. 자동 안에서는 '<lang>-orig'(원어 트랙)가
+    '<lang>'(자동번역일 수 있음)보다 앞선다 — 기존 en 우선순위와 같은 결과.
+    """
+    best = MISS
+    for i, p in enumerate(prefer):
+        if t.is_manual:
+            if t.lang == p:
+                r = i * 10
+            elif t.lang.startswith(f"{p}-"):
+                r = i * 10 + 1
+            else:
+                continue
+        else:
+            if t.lang == f"{p}-orig":
+                r = 1000 + i * 10
+            elif t.lang == p:
+                r = 1000 + i * 10 + 1
+            elif t.lang.startswith(f"{p}-"):
+                r = 1000 + i * 10 + 2
+            else:
+                continue
+        best = min(best, r)
+    return best
 
 
 def pick_track(tracks: list[Track], prefer: list[str] | tuple[str, ...]) -> Track | None:
     """prefer 집합 안에서만 고른다. prefer가 비면 자막 경로를 끄는 것과 같다."""
     if not prefer:
         return None
-    allowed = [t for t in tracks
-               if t.lang in prefer or any(t.lang.startswith(f"{p}-") for p in prefer)]
-    ranked = sorted((t for t in allowed if _rank(t) < 99), key=_rank)
+    ranked = sorted((t for t in tracks if _rank(t, prefer) < MISS),
+                    key=lambda t: _rank(t, prefer))
     return ranked[0] if ranked else None
 
 
@@ -167,7 +182,7 @@ def fetch_caption(url: str, ws: Path, ch, js: str = "node",
 
     track = pick_track(list_tracks(url, js), ch.caption_langs)
     if track is None:
-        print("[caption] en 계열 트랙 없음 → Whisper 폴백")
+        print(f"[caption] {'/'.join(ch.caption_langs) or '-'} 계열 트랙 없음 → Whisper 폴백")
         _record("whisper(fallback)", None, "no_track")
         return None
 

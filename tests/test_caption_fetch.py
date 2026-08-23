@@ -108,6 +108,13 @@ def test_t4_non_english_rejected():
     assert cf.pick_track([Track("ko", False), Track("ja", True)], PREFER) is None
 
 
+def test_t4b_korean_prefer_picks_korean():
+    """언어 하드코딩 제거 — prefer=('ko',)면 한국어 트랙이 선택된다(AI Frontier Korea)."""
+    tracks = [Track("en", False), Track("ko", False), Track("ko-orig", False)]
+    assert cf.pick_track(tracks, ("ko",)) == Track("ko-orig", False)
+    assert cf.pick_track([Track("ko", False), Track("ko", True)], ("ko",)) == Track("ko", True)
+
+
 def test_t5_empty_prefer_disables_captions():
     assert cf.pick_track([Track("en", True)], ()) is None
 
