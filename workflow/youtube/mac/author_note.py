@@ -96,7 +96,8 @@ def l0_check(md: str) -> list[str]:
         bad.append(f"4렌즈 행 {len(rows)}개(<4)")
     z1 = _section(md, r"^## 1\. 쉬운 말로", r"^> \[!note\]- 섹션별 상세")
     tr = _section(md, r"^## 교정 전사", r"\Z")
-    if tr and len(z1) > max(len(tr), 3000):
+    # 교정 전사도 LLM이 압축하므로 비율만으론 흔들린다 → 절대 상한 6,000자를 함께 둔다(실측: 104분 영상 Z1 5.2K)
+    if tr and len(z1) > max(len(tr), 6000):
         bad.append(f"Z1 {len(z1)}자 > 교정전사 {len(tr)}자")
     return bad
 
