@@ -38,10 +38,16 @@ RULES_TMPL = (
     "- [§2 이제 정확한 말로] §1에서 쓴 쉬운 표현을 정확한 용어와 짝지운다. 한국어(English) 병기, IPA는 진짜 사전 단어에만 "
     "(약어·제품명엔 없음, 풀네임이 영어단어면 풀네임에). 어원 칸은 라틴·그리스 어근 또는 은유의 출처 1줄.\n"
     "- [§3 숫자] 화자가 흘린 구체 수치·설정값·명령어. 셋째 열 '이 숫자가 바꾸는 것'을 반드시 채운다.\n"
-    "- [§4 막히는 곳] 독자가 막힐 지점 1~3개와 원문 회귀 지점. 화자가 인정한 한계, 작성자의 의심.\n"
-    "- [§5 4렌즈] 렌즈 4개 모두 채우되 억지 매핑 금지. 해당 없으면 '—'. 렌즈당 2문장 이내. "
-    "각 통찰은 영상 고유의 이름·숫자를 최소 1개 담는다(일반론 금지). 사업가 렌즈의 '우리'는 에이폼(이커머스·물류)이다.\n"
-    "- [§6 파인만 과제] '__에게 이 개념을 3문장으로 설명해 본다' 1개(대상은 빈칸). 행동은 선택이며 30분짜리만.\n"
+    "- [§0 읽기 전 내 답] 읽기 전에 독자가 먼저 답할 질문 3개(기제·반직관·자기 일 대입). 답은 비워 둔다.\n"
+    "- [§1 끝] '비유가 깨지는 곳' 1~2개를 반드시 붙인다. 비유가 실제와 어긋나는 지점이 파인만 3단계다.\n"
+    "- [§2 어원] 라틴·그리스 어근 → 원뜻 → 현재 뜻으로 옮아온 경로까지. '흔한 오해' 열은 '~가 아니다. ~다' 꼴.\n"
+    "- [§4 막히는 곳] 독자가 막힐 반직관 지점 1~3개 + 한 줄 해소 + 원문 회귀 대목. 화자가 인정한 한계, 작성자의 경계"
+    "(추정치·목표치·특정 표본을 보편 법칙과 구분), 열린 질문(전사 내 모순이 있으면 여기).\n"
+    "- [§5 4렌즈] 렌즈 4개 모두 채우되 억지 매핑 금지. 열 = 통찰 | 반례 | 날카로운 행동. "
+    "각 통찰은 영상 고유의 이름·숫자를 최소 1개 담는다(일반론 금지). 반례는 그 통찰이 안 먹히는 조건. "
+    "행동은 이번 주 30분으로 되는 것. 사업가 렌즈의 '우리'는 에이폼(이커머스·물류)이다.\n"
+    "- [§6] 파인만 과제 1개('__에게 …를 3문장으로') + 작은 실험 1개(행동·측정·중단 기준 셋 다).\n"
+    "- [골드 예시] 함께 주는 note_exemplar.md의 밀도·어원 깊이·반례·행동 구체성을 기준으로 삼는다. 내용을 베끼지 말고 수준을 맞춘다.\n"
     "- [길이] §1~§6 합계는 접기 교정 전사보다 짧게. 영상이 3분 미만이면 카드·§1·§2·§5·과제만 채우고 §3·§4·섹션별 상세는 생략한다.\n"
     "- 이모지 금지. '==하이라이트==' 금지. 강조는 **볼드**와 "
     '<span style="color:#ef6c00">…</span> 두 종류만.\n'
@@ -125,6 +131,10 @@ def main(argv=None) -> int:
     ap.add_argument("--out", default=None, help="지정 저장경로(검증용). 생략 시 볼트")
     ap.add_argument("--channel", default=None, help="채널 key (노트 폴더·채널명·톤 결정)")
     ap.add_argument("--variant", default=None, help="대조본 접미(예: v2) — 파일명·제목·slug에 붙는다")
+    ap.add_argument("--template", default="note_template.md",
+                    help="workflow/youtube/ 아래 템플릿 파일명(기본 note_template.md, 클로드 v3=note_template.claude.md)")
+    ap.add_argument("--exemplar", default="note_exemplar.md",
+                    help="골드 예시 파일명. 없으면 생략. 'none'이면 안 붙임")
     ap.add_argument("--force", action="store_true")
     a = ap.parse_args(argv)
 
@@ -133,7 +143,10 @@ def main(argv=None) -> int:
     src = clean_p if clean_p.exists() else (w / "transcript.txt")
     clean = src.read_text(encoding="utf-8")
     meta = json.loads((w / "youtube.json").read_text(encoding="utf-8"))
-    tmpl = (Path(__file__).resolve().parent.parent / "note_template.md").read_text(encoding="utf-8")
+    yt_dir = Path(__file__).resolve().parent.parent
+    tmpl = (yt_dir / a.template).read_text(encoding="utf-8")
+    ex_p = yt_dir / a.exemplar
+    exemplar = ex_p.read_text(encoding="utf-8") if a.exemplar != "none" and ex_p.exists() else ""
 
     ch = None
     if a.channel:
@@ -161,7 +174,8 @@ def main(argv=None) -> int:
 
     user = (
         f"[note_template.md]\n{tmpl}\n\n"
-        f"[메타(youtube.json)]\n{json.dumps(meta, ensure_ascii=False)[:3000]}\n\n"
+        + (f"[note_exemplar.md — 골드 예시(다른 영상). 수준의 기준이지 내용의 기준이 아니다]\n{exemplar}\n\n" if exemplar else "")
+        + f"[메타(youtube.json)]\n{json.dumps(meta, ensure_ascii=False)[:3000]}\n\n"
         f"[교정 전사]\n{clean}"
     )
     channel_name = ch.name if ch else "TechBridge-KR"
