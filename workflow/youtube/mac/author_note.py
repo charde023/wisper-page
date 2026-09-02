@@ -102,16 +102,20 @@ def l0_check(md: str) -> list[str]:
     return bad
 
 
+VARIANT_LABEL = {"v2": "클로드 버전"}  # 제목 옆 표시명(차드 지시 2026-09-03). slug는 ASCII 접미 유지
+
+
 def apply_variant(md: str, variant: str) -> str:
-    """대조본: title 접미 + slug_suffix. frontmatter를 YAML로 다시 쓴다."""
+    """대조본: title 접미(표시명) + slug_suffix(ASCII). frontmatter를 YAML로 다시 쓴다."""
     import yaml
+    label = VARIANT_LABEL.get(variant, variant)
     m = FM_RE.search(md)
     data = yaml.safe_load(m.group(1))
-    data["title"] = f"{data.get('title', '')} ({variant})"
+    data["title"] = f"{data.get('title', '')} ({label})"
     data["slug_suffix"] = variant
     fm = yaml.safe_dump(data, allow_unicode=True, sort_keys=False, width=10_000).rstrip("\n")
     body = md[m.end():]
-    body = re.sub(r"^\n# .*$", lambda mm: mm.group(0) + f" ({variant})", body, count=1, flags=re.M)
+    body = re.sub(r"^\n# .*$", lambda mm: mm.group(0) + f" ({label})", body, count=1, flags=re.M)
     return f"---\n{fm}\n---" + body
 
 
