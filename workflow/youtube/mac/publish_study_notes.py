@@ -201,8 +201,10 @@ def note_to_html(md_text: str, channel: str = "TechBridge-KR"):
 def slug_for(fm: dict, fallback: str) -> str:
     vid = fm.get("video_id")
     up = (str(fm.get("upload_date") or "")).replace("-", "")
+    sfx = re.sub(r"[^a-zA-Z0-9]+", "", str(fm.get("slug_suffix") or ""))  # 대조본(v2 등)은 별도 slug
     if vid:
-        return f"{up}-{vid}" if up else vid
+        base = f"{up}-{vid}" if up else vid
+        return f"{base}-{sfx}" if sfx else base
     return re.sub(r"[^a-zA-Z0-9]+", "-", fallback).strip("-").lower()[:60]
 
 
